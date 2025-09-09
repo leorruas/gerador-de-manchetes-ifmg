@@ -133,4 +133,4 @@ Este projeto foi configurado para ser publicado como um site estático, ideal pa
 
 Após alguns minutos, seu site estará no ar! O link será exibido na mesma página, no formato: `https://<seu-usuario>.github.io/<nome-do-repositorio>/`.
 
-**Nota Técnica:** O caminho para o script principal em `index.html` foi ajustado para `./index.tsx` (um caminho relativo) para garantir que funcione corretamente quando o site for servido de um subdiretório, como é o caso do GitHub Pages.
+**Nota Técnica:** Para que o código (TypeScript/JSX) funcione diretamente no navegador sem um passo de compilação prévia, o projeto utiliza o **Babel Standalone**. Ele é carregado no `index.html` e transpila o código em tempo real. O script principal foi alterado para `type="text/babel"` para que o Babel possa processá-lo corretamente. Esta abordagem simplifica o deploy em ambientes de hospedagem estática como o GitHub Pages.
