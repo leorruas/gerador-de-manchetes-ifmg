@@ -1,25 +1,40 @@
 import * as constants from '../constants.js';
 
-function wrapText(context, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(' ');
-  let line = '';
-  let lineCount = 0;
+/**
+ * Calcula como o texto deve ser quebrado em várias linhas, respeitando
+ * a largura máxima e as quebras de linha manuais (\n).
+ * @param {CanvasRenderingContext2D} context - O contexto do canvas.
+ * @param {string} text - O texto a ser processado.
+ * @param {number} maxWidth - A largura máxima permitida para uma linha de texto.
+ * @returns {string[]} Um array de strings, onde cada string é uma linha de texto.
+ */
+function getTextLines(context, text, maxWidth) {
+  const paragraphs = text.split('\n');
+  const lines = [];
 
-  for(let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + ' ';
-    const metrics = context.measureText(testLine);
-    const testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0) {
-      context.fillText(line, x, y + (lineCount * lineHeight));
-      line = words[n] + ' ';
-      lineCount++;
-    } else {
-      line = testLine;
+  for (const paragraph of paragraphs) {
+    if (paragraph.trim() === '') {
+      lines.push(''); // Manter linhas vazias de parágrafos
+      continue;
+    }
+    const words = paragraph.split(' ');
+    let currentLine = '';
+    for (let i = 0; i < words.length; i++) {
+      const testLine = currentLine + words[i] + ' ';
+      if (context.measureText(testLine.trim()).width > maxWidth && i > 0) {
+        lines.push(currentLine.trim());
+        currentLine = words[i] + ' ';
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if (currentLine.trim() !== '') {
+        lines.push(currentLine.trim());
     }
   }
-  context.fillText(line, x, y + (lineCount * lineHeight));
-  return (lineCount + 1) * lineHeight;
+  return lines;
 }
+
 
 function getFilename(slug, format, type) {
   const date = new Date().toISOString().split('T')[0];
@@ -124,7 +139,8 @@ export async function generateAndDownloadImage(
     const textBoxPadding = format.width * 0.037; // 40px for 1080 width
     const boxX = (format.width - textBoxWidth) / 2;
     
-    ctx.font = `bold ${format.width * 0.0463}px Archivo`; // 50px for 1080
+    const fontSize = format.width * 0.0463; // 50px for 1080
+    ctx.font = `bold ${fontSize}px Archivo`;
     ctx.textBaseline = 'top';
     const lineHeight = format.width * 0.0555; // 60px for 1080
 
@@ -136,19 +152,9 @@ export async function generateAndDownloadImage(
     }
     
     // --- Text Height Calculation ---
-    const words = headline.split(' ');
-    let line = '';
-    let lineCount = 1;
-    for (const word of words) {
-        const testLine = line + word + ' ';
-        if (ctx.measureText(testLine).width > textMaxWidth && line.length > 0) {
-            lineCount++;
-            line = word + ' ';
-        } else {
-            line = testLine;
-        }
-    }
-    const textHeight = lineCount * lineHeight - (lineHeight - (format.width * 0.0463));
+    const lines = getTextLines(ctx, headline, textMaxWidth);
+    const lineCount = lines.length;
+    const textHeight = lineCount > 0 ? ((lineCount - 1) * lineHeight) + fontSize : 0;
     // --- End Text Height Calculation ---
     
     const boxContentHeight = format.hasLogo ? Math.max(textHeight, logoSize) : textHeight;
@@ -157,7 +163,21 @@ export async function generateAndDownloadImage(
     const safeAreaHeight = format.height - boxHeight;
     const boxY = (safeAreaHeight * textVerticalPercent);
 
-    // Glass effect box
+    // --- Start Glass Effect ---
+    // 1. Save context state
+    ctx.save();
+    // 2. Create the rounded rectangle path and use it as a clipping mask
+    drawRoundedRect(ctx, boxX, boxY, textBoxWidth, boxHeight, 24);
+    ctx.clip();
+    // 3. Apply a blur filter
+    ctx.filter = 'blur(12px)';
+    // 4. Draw the main canvas (the background image) back onto itself, but blurred and clipped
+    ctx.drawImage(canvas, 0, 0);
+    // 5. Restore the context to remove the filter and clipping mask
+    ctx.restore();
+    // --- End Glass Effect ---
+
+    // Draw semi-transparent overlay on top of the blurred area
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     drawRoundedRect(ctx, boxX, boxY, textBoxWidth, boxHeight, 24);
     ctx.fill();
@@ -181,7 +201,9 @@ export async function generateAndDownloadImage(
     // Draw text
     ctx.fillStyle = '#FFFFFF';
     const textY = boxY + (boxHeight - textHeight) / 2;
-    wrapText(ctx, headline, textX, textY, textMaxWidth, lineHeight);
+    lines.forEach((line, index) => {
+        ctx.fillText(line, textX, textY + (index * lineHeight));
+    });
   }
 
   // Trigger download
