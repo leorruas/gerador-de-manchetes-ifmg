@@ -114,3 +114,23 @@ A interface segue uma estética minimalista, limpa e moderna, com um tema escuro
 -   **Documentar Sempre:** Lembre-se de documentar *todas* as alterações de forma clara e completa no `README.md`, `BUSINESS_RULES.md` e `STYLE_GUIDE.md`. A documentação é tão crucial quanto o código.
 -   **Não Remova Este Lembrete:** Esta seção deve permanecer no `README.md` como um lembrete constante da importância da documentação.
 -   **Referência do Logo:** O arquivo `ifmg.svg` é uma referência visual e de código para o logo circular do IFMG. Utilize-o conforme necessário para garantir a consistência visual.
+
+---
+
+## 7. Deploy no GitHub Pages
+
+Este projeto foi configurado para ser publicado como um site estático, ideal para serviços como o GitHub Pages.
+
+### Passo a Passo para Publicação
+
+1.  **Acesse as Configurações:** No seu repositório do GitHub, vá para a aba "Settings".
+2.  **Seção "Pages":** No menu lateral, clique em "Pages".
+3.  **Fonte de Publicação:**
+    -   Em "Build and deployment", na opção "Source", selecione "Deploy from a branch".
+    -   Em "Branch", escolha a branch que contém o código do site (geralmente `main` ou `master`).
+    -   Deixe a pasta como `/ (root)`.
+4.  **Salve:** Clique em "Save".
+
+Após alguns minutos, seu site estará no ar! O link será exibido na mesma página, no formato: `https://<seu-usuario>.github.io/<nome-do-repositorio>/`.
+
+**Nota Técnica:** O caminho para o script principal em `index.html` foi ajustado para `./index.tsx` (um caminho relativo) para garantir que funcione corretamente quando o site for servido de um subdiretório, como é o caso do GitHub Pages.
