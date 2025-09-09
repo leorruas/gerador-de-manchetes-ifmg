@@ -119,7 +119,7 @@ A interface segue uma estética minimalista, limpa e moderna, com um tema escuro
 
 ## 7. Deploy no GitHub Pages
 
-Este projeto foi configurado para ser publicado como um site estático, ideal para serviços como o GitHub Pages.
+Este projeto foi configurado para ser publicado como um site estático, ideal para serviços como o GitHub Pages, **sem a necessidade de um processo de compilação (build)**.
 
 ### Passo a Passo para Publicação
 
@@ -131,15 +131,14 @@ Este projeto foi configurado para ser publicado como um site estático, ideal pa
     -   Deixe a pasta como `/ (root)`.
 4.  **Salve:** Clique em "Save".
 
-Após alguns minutos, seu site estará no ar! O link será exibido na mesma página, no formato: `https://<seu-usuario>.github.io/<nome-do-repositorio>/`.
+Após alguns minutos, seu site estará no ar! O link será exibido na mesma página.
 
-**Nota Técnica:** Para que o código (TypeScript/JSX) funcione diretamente no navegador sem um passo de compilação prévia, o projeto utiliza o **Babel Standalone**. Ele é carregado no `index.html` e transpila o código em tempo real.
+### Como Funciona (Nota Técnica)
 
-Para contornar um problema comum em servidores de arquivos estáticos (como o GitHub Pages) que não enviam o tipo de MIME correto para arquivos `.tsx`, o `index.html` agora contém um pequeno script que:
-1.  Busca o arquivo de entrada (`index.tsx`) como texto.
-2.  Cria uma nova tag `<script>` com o tipo `text/babel`.
-3.  Injeta o código-fonte do `index.tsx` dentro dessa tag.
+Para que o código (TypeScript/JSX) funcione diretamente no navegador sem um passo de compilação, o projeto utiliza uma combinação de tecnologias:
 
-Isso faz com que o Babel Standalone processe o código corretamente, incluindo seus `imports` para outros módulos, sem que o navegador bloqueie o arquivo inicial por causa do tipo de MIME incorreto.
+1.  **Babel Standalone:** Carregado no `index.html`, ele transpila o código TSX/JSX para JavaScript puro em tempo real, no próprio navegador.
+2.  **Import Maps:** Esta é a chave para fazer os `imports` de módulos funcionarem. O `importmap` no `index.html` cria um "mapa" que diz ao navegador como resolver os nomes dos módulos. Para garantir que a resolução seja robusta, usamos os **nomes de arquivo completos (com extensão)** como chaves no mapa e nos `import` statements (ex: `import App from 'app.tsx'`). Isso elimina ambiguidades e garante que o navegador encontre o arquivo correto.
+3.  **Script Loader:** Para contornar um problema comum onde servidores estáticos (como o GitHub Pages) não enviam o tipo de MIME correto para arquivos `.tsx`, o `index.html` contém um pequeno script que carrega o arquivo de entrada (`index.tsx`) como texto e o injeta em uma tag de script do tipo `text/babel`. Isso garante que o Babel possa processá-lo antes que o navegador o rejeite.
 
-**Uso do Tailwind CDN:** A versão atual usa o CDN do Tailwind CSS para simplicidade de desenvolvimento. Para um ambiente de produção real, é recomendado instalar o Tailwind como um plugin PostCSS ou usar a Tailwind CLI para gerar um arquivo CSS otimizado. Isso melhora o desempenho e a confiabilidade.
+**Uso do Tailwind CDN:** A versão atual usa o CDN do Tailwind CSS para simplicidade. Para um ambiente de produção mais otimizado, a prática recomendada é instalar o Tailwind como um plugin PostCSS ou usar a Tailwind CLI para gerar um arquivo CSS final.

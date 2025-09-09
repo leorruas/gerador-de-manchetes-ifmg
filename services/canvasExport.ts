@@ -1,5 +1,5 @@
-import { FormatConfig, ImageTransform, ExportType } from '../types';
-import { IFMG_CIRCLE_LOGO_SVG_STRING } from '../constants';
+import { FormatConfig, ImageTransform, ExportType } from 'types.ts';
+import { IFMG_CIRCLE_LOGO_SVG_STRING } from 'constants.tsx';
 import React from 'react';
 
 function wrapText(context: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {

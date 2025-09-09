@@ -10,7 +10,11 @@
   },
   "dependencies": {
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "types.ts": "latest",
+    "constants.tsx": "latest",
+    "services/canvasExport.ts": "latest",
+    "services": "^0.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

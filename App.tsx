@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { FormatId, FormatConfig, ImageTransform, ExportType } from './types';
-import { FORMATS, IFMGLogo, IFMGCircleLogo } from './constants';
-import { generateAndDownloadImage } from './services/canvasExport';
+import { FormatId, FormatConfig, ImageTransform, ExportType } from 'types.ts';
+import { FORMATS, IFMGLogo, IFMGCircleLogo } from 'constants.tsx';
+import { generateAndDownloadImage } from 'services/canvasExport.ts';
 
 // --- Helper Components ---
 
