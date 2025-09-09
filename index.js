@@ -1,3 +1,4 @@
+
 import * as constants from './constants.js';
 import * as canvasExport from './services/canvasExport.js';
 
@@ -17,7 +18,7 @@ let state = {
         ...acc,
         [curr.id]: { zoom: 1, position: { x: 0, y: 0 } }
     }), {}),
-    isCropModalOpen: false,
+    originalTransforms: {}, // To store state before cropping for cancellation
     croppingFormatId: null,
     showExportModal: false,
 };
@@ -110,38 +111,45 @@ window.handleExport = async (type, event) => {
     }
 };
 
-window.openCropModal = (formatId) => {
-    state.croppingFormatId = formatId;
-    state.isCropModalOpen = true;
-    renderModals();
-};
-
-window.closeCropModal = () => {
-    state.isCropModalOpen = false;
-    state.croppingFormatId = null;
-    renderModals();
-};
-
-window.saveCrop = () => {
-    const formatId = state.croppingFormatId;
-    if (formatId) {
-        const zoomInput = document.getElementById('zoom-slider');
-        if (zoomInput) {
-            const zoom = parseFloat(zoomInput.value);
-            // The position is already updated in the state by the drag handlers
-            state.transforms[formatId].zoom = zoom;
+window.toggleCropMode = (formatId) => {
+    if (state.croppingFormatId === formatId) {
+        // If clicking the same crop button again, just exit (same as cancel)
+        window.cancelCropInline(formatId);
+    } else {
+        // If there's another crop open, cancel it first
+        if(state.croppingFormatId) {
+             window.cancelCropInline(state.croppingFormatId);
         }
+        // Store the original transform state for cancellation
+        state.originalTransforms[formatId] = { ...state.transforms[formatId] };
+        state.croppingFormatId = formatId;
+        renderApp();
     }
-    window.closeCropModal();
-    renderApp(); // Re-render the main app to show the updated crop
 };
+
+window.saveCropInline = (formatId) => {
+    delete state.originalTransforms[formatId];
+    state.croppingFormatId = null;
+    renderApp();
+};
+
+window.cancelCropInline = (formatId) => {
+    // Restore the original transform
+    if (state.originalTransforms[formatId]) {
+        state.transforms[formatId] = state.originalTransforms[formatId];
+        delete state.originalTransforms[formatId];
+    }
+    state.croppingFormatId = null;
+    renderApp();
+};
+
 
 window.handleZoomChange = (event) => {
     const zoom = parseFloat(event.target.value);
     const formatId = state.croppingFormatId;
     if(formatId) {
         state.transforms[formatId].zoom = zoom;
-        const img = document.getElementById(`crop-image-${formatId}`);
+        const img = document.getElementById(`preview-image-${formatId}`);
         if (img) {
             const { x, y } = state.transforms[formatId].position;
             img.style.transform = `scale(${zoom}) translate(${x}px, ${y}px)`;
@@ -187,7 +195,7 @@ window.startDrag = (event, type, formatId) => {
         document.body.style.cursor = 'grabbing';
     } else if (type === 'crop') {
         dragContext.initialPosition = { ...state.transforms[formatId].position };
-        document.getElementById(`crop-image-container-${formatId}`).style.cursor = 'grabbing';
+        document.getElementById(`preview-${formatId}`).style.cursor = 'grabbing';
     }
     window.addEventListener('mousemove', onDrag);
     window.addEventListener('mouseup', endDrag);
@@ -219,7 +227,7 @@ function onDrag(event) {
             y: dragContext.initialPosition.y + deltaY
         };
         state.transforms[dragContext.formatId].position = newPos;
-        const img = document.getElementById(`crop-image-${dragContext.formatId}`);
+        const img = document.getElementById(`preview-image-${dragContext.formatId}`);
         const zoom = state.transforms[dragContext.formatId].zoom;
         if(img) img.style.transform = `scale(${zoom}) translate(${newPos.x}px, ${newPos.y}px)`;
     }
@@ -229,8 +237,8 @@ function endDrag() {
     if (dragContext.type === 'text') {
         document.body.style.cursor = 'default';
     } else if (dragContext.type === 'crop' && dragContext.formatId) {
-        const container = document.getElementById(`crop-image-container-${dragContext.formatId}`);
-        if(container) container.style.cursor = 'grab';
+        const container = document.getElementById(`preview-${dragContext.formatId}`);
+        if(container) container.style.cursor = 'default';
     }
     dragContext = {};
     window.removeEventListener('mousemove', onDrag);
@@ -289,6 +297,7 @@ const WelcomeScreen = () => `
 
 const ImagePreview = (format) => {
     const transform = state.transforms[format.id];
+    const isCropping = state.croppingFormatId === format.id;
     
     const previewWidth = Math.min(window.innerWidth - 32, 640);
     const scaleFactor = previewWidth / format.width;
@@ -296,8 +305,13 @@ const ImagePreview = (format) => {
     return `
         <div class="mb-8 last:mb-0">
             <h3 class="text-lg font-bold text-zinc-400 mb-2">${format.name} (${format.width}x${format.height})</h3>
-            <div id="preview-${format.id}" class="relative bg-black rounded-lg overflow-hidden shadow-lg w-full" style="aspect-ratio: ${format.width} / ${format.height}">
-                <img src="${state.baseImage}" alt="Preview" class="absolute top-0 left-0 w-full h-full object-cover" 
+            <div id="preview-${format.id}" 
+                 class="relative bg-black rounded-lg overflow-hidden shadow-lg w-full ${isCropping ? 'cursor-grab' : ''}" 
+                 style="aspect-ratio: ${format.width} / ${format.height}"
+                 onmousedown="${isCropping ? `startDrag(event, 'crop', '${format.id}')` : ''}"
+                 ontouchstart="${isCropping ? `startDrag(event, 'crop', '${format.id}')` : ''}">
+                
+                <img id="preview-image-${format.id}" src="${state.baseImage}" alt="Preview" class="absolute top-0 left-0 w-full h-full object-cover pointer-events-none" 
                      style="transform: scale(${transform.zoom}) translate(${transform.position.x}px, ${transform.position.y}px);">
 
                 ${format.hasText ? `
@@ -315,9 +329,28 @@ const ImagePreview = (format) => {
                         </div>
                     </div>
                 ` : ''}
-                 <button onclick="openCropModal('${format.id}')" class="absolute top-2 right-2 p-2 bg-black/50 rounded-full hover:bg-black/75 transition-colors">
+                
+                ${!isCropping ? `
+                 <button onclick="toggleCropMode('${format.id}')" class="absolute top-2 right-2 p-2 bg-black/50 rounded-full hover:bg-black/75 transition-colors">
                      ${constants.CropIcon}
                  </button>
+                 ` : ''}
+
+                 ${isCropping ? `
+                    <div class="absolute inset-0 bg-black/40 pointer-events-none"></div>
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-11/12 max-w-sm bg-black/50 backdrop-blur-sm rounded-full p-2 flex items-center gap-4 z-10">
+                        <div class="flex items-center gap-2 flex-grow">
+                            ${constants.EditIcon.ZoomOut}
+                            <input type="range" id="zoom-slider-${format.id}" min="1" max="3" step="0.01" value="${transform.zoom}" oninput="handleZoomChange(event)"
+                                   class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
+                            ${constants.EditIcon.ZoomIn}
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-2">
+                            <button onclick="cancelCropInline('${format.id}')" class="bg-zinc-700 text-white font-semibold py-1 px-3 rounded-full text-sm hover:bg-zinc-600 transition-colors">Cancelar</button>
+                            <button onclick="saveCropInline('${format.id}')" class="bg-amber-400 text-black font-bold py-1 px-3 rounded-full text-sm hover:bg-amber-500 transition-colors">Salvar</button>
+                        </div>
+                    </div>
+                 ` : ''}
             </div>
         </div>
     `;
@@ -349,41 +382,6 @@ const ExportModal = () => `
         </div>
     </div>
 `;
-
-const CropModal = () => {
-    const format = constants.FORMATS[state.croppingFormatId];
-    if (!format) return '';
-    const transform = state.transforms[format.id];
-
-    return `
-        <div class="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
-            <div class="bg-black border border-zinc-800 rounded-xl shadow-lg w-full max-w-2xl flex flex-col max-h-[90vh]">
-                <div class="p-6 border-b border-zinc-800 flex-shrink-0">
-                    <h2 class="text-xl font-bold text-center">Reenquadrar: ${format.name}</h2>
-                </div>
-                <div class="p-6 flex-1 flex items-center justify-center min-h-0 overflow-hidden">
-                    <div class="relative w-full max-w-full max-h-full" style="aspect-ratio: ${format.width} / ${format.height}">
-                        <div id="crop-image-container-${format.id}" class="absolute inset-0 w-full h-full overflow-hidden bg-black rounded-lg cursor-grab" onmousedown="startDrag(event, 'crop', '${format.id}')" ontouchstart="startDrag(event, 'crop', '${format.id}')">
-                            <img id="crop-image-${format.id}" src="${state.baseImage}" alt="Crop preview" class="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
-                                 style="transform: scale(${transform.zoom}) translate(${transform.position.x}px, ${transform.position.y}px); transition: transform 0.1s ease-out;">
-                        </div>
-                        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-11/12 max-w-xs bg-black/50 backdrop-blur-sm rounded-full p-2 flex items-center gap-2 z-10">
-                            ${constants.EditIcon.ZoomOut}
-                            <input type="range" id="zoom-slider" min="1" max="3" step="0.01" value="${transform.zoom}" oninput="handleZoomChange(event)"
-                                   class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
-                            ${constants.EditIcon.ZoomIn}
-                        </div>
-                    </div>
-                </div>
-                <div class="p-6 border-t border-zinc-800 flex gap-4 flex-shrink-0">
-                    <button onclick="closeCropModal()" class="flex-1 bg-zinc-700 text-white font-semibold py-2 rounded-lg hover:bg-zinc-600 transition-colors">Cancelar</button>
-                    <button onclick="saveCrop()" class="flex-1 bg-amber-400 text-black font-bold py-2 rounded-lg hover:bg-amber-500 transition-colors">Salvar</button>
-                </div>
-            </div>
-        </div>
-    `;
-};
-
 
 // --- RENDER FUNCTIONS ---
 
@@ -424,9 +422,7 @@ function renderApp() {
 function renderModals() {
     if (!modalContainerElement) return;
 
-    if (state.isCropModalOpen) {
-        modalContainerElement.innerHTML = CropModal();
-    } else if (state.showExportModal) {
+    if (state.showExportModal) {
         modalContainerElement.innerHTML = ExportModal();
     } else {
         modalContainerElement.innerHTML = '';
