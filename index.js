@@ -1,5 +1,5 @@
-import { FORMATS, IFMG_LOGO_SVG_STRING, StepIcon, UploadIcon, CropIcon, EditIcon } from './constants.js';
-import { generateAndDownloadImage } from './services/canvasExport.js';
+import * as constants from './constants.js';
+import * as canvasExport from './services/canvasExport.js';
 
 // --- APPLICATION STATE ---
 let state = {
@@ -8,12 +8,12 @@ let state = {
     headline: "Título da notícia ou chamada para a arte",
     slug: "noticia-exemplo",
     textVerticalPositions: {
-        [FORMATS.INSTA_POST.id]: 0.5,
-        [FORMATS.INSTA_STORY.id]: 0.5,
-        [FORMATS.PORTAL_CAMPI.id]: 0.5,
-        [FORMATS.PORTAL_PRINCIPAL.id]: 0.5,
+        [constants.FORMATS.INSTA_POST.id]: 0.5,
+        [constants.FORMATS.INSTA_STORY.id]: 0.5,
+        [constants.FORMATS.PORTAL_CAMPI.id]: 0.5,
+        [constants.FORMATS.PORTAL_PRINCIPAL.id]: 0.5,
     },
-    transforms: Object.values(FORMATS).reduce((acc, curr) => ({
+    transforms: Object.values(constants.FORMATS).reduce((acc, curr) => ({
         ...acc,
         [curr.id]: { zoom: 1, position: { x: 0, y: 0 } }
     }), {}),
@@ -67,7 +67,7 @@ window.handleNewImage = () => {
     // Reset state to defaults
     state.headline = "Título da notícia ou chamada para a arte";
     state.slug = "noticia-exemplo";
-    state.transforms = Object.values(FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: { zoom: 1, position: { x: 0, y: 0 } } }), {});
+    state.transforms = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: { zoom: 1, position: { x: 0, y: 0 } } }), {});
     renderApp();
 };
 
@@ -88,7 +88,7 @@ window.handleSlugChange = (event) => {
     if(input) input.value = state.slug;
 };
 
-window.handleExport = async (type) => {
+window.handleExport = async (type, event) => {
     if (!state.baseImage) return;
     const exportButton = event.target;
     const originalText = exportButton.innerHTML;
@@ -96,8 +96,8 @@ window.handleExport = async (type) => {
     exportButton.innerHTML = 'Exportando...';
 
     try {
-        for (const format of Object.values(FORMATS)) {
-            await generateAndDownloadImage(format, state.baseImageElement, state.transforms[format.id], state.headline, state.textVerticalPositions[format.id], state.slug, type);
+        for (const format of Object.values(constants.FORMATS)) {
+            await canvasExport.generateAndDownloadImage(format, state.baseImageElement, state.transforms[format.id], state.headline, state.textVerticalPositions[format.id], state.slug, type);
         }
     } catch (e) {
         console.error("Export failed:", e);
@@ -235,13 +235,13 @@ const WelcomeScreen = () => `
     <div class="flex items-center justify-center min-h-screen p-8">
         <div class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 items-center gap-16">
             <div class="flex flex-col items-center text-center">
-                <div class="mb-8">
-                    <div class="w-32 h-32 mx-auto text-white">${IFMG_LOGO_SVG_STRING}</div>
+                 <div class="flex flex-col items-center mb-8">
+                    <div class="w-32 h-32 text-white">${constants.IFMG_LOGO_SVG_STRING}</div>
                     <h1 class="text-5xl font-bold mt-4">MancheteExpress</h1>
                 </div>
                 <label id="dropzone" for="image-upload" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)"
                     class="w-full p-12 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900">
-                    ${UploadIcon}
+                    ${constants.UploadIcon}
                     <p class="mt-4 font-semibold text-white">Arraste e solte uma imagem aqui</p>
                     <p class="text-sm text-zinc-400">ou clique para selecionar</p>
                     <input id="image-upload" type="file" accept="image/jpeg, image/png, image/webp" class="hidden" onchange="handleImageSelect(event)" />
@@ -251,23 +251,23 @@ const WelcomeScreen = () => `
                 <h2 class="text-2xl font-bold mb-6 text-center lg:text-left">Como usar:</h2>
                 <ol class="space-y-4">
                     <li class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${StepIcon.Upload}</div>
+                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Upload}</div>
                         <div><p class="font-bold text-white">1. Envie uma imagem</p><p class="text-zinc-400">Arraste um arquivo para a área indicada ou clique para escolher (JPG, PNG, WebP).</p></div>
                     </li>
                     <li class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${StepIcon.Crop}</div>
+                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Crop}</div>
                         <div><p class="font-bold text-white">2. Reenquadre a imagem</p><p class="text-zinc-400">Use o ícone de alvo em cada preview para abrir o editor, onde você pode ajustar o zoom e a posição da imagem.</p></div>
                     </li>
                     <li class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${StepIcon.Edit}</div>
+                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Edit}</div>
                         <div><p class="font-bold text-white">3. Edite a manchete</p><p class="text-zinc-400">Clique no texto padrão sobre a imagem para escrever a manchete desejada para os formatos de Instagram.</p></div>
                     </li>
                     <li class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${StepIcon.Drag}</div>
+                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Drag}</div>
                         <div><p class="font-bold text-white">4. Ajuste a posição do texto</p><p class="text-zinc-400">Clique e arraste a caixa de texto verticalmente para encontrar a melhor posição em cada formato.</p></div>
                     </li>
                      <li class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${StepIcon.Export}</div>
+                        <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Export}</div>
                         <div><p class="font-bold text-white">5. Exporte tudo</p><p class="text-zinc-400">Clique em "Exportar Todos", defina um nome de arquivo (slug) e escolha o formato para baixar todas as artes.</p></div>
                     </li>
                 </ol>
@@ -293,7 +293,7 @@ const ImagePreview = (format) => {
                 ${format.hasText ? `
                     <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" style="transform: translateY(0);" onmousedown="startDrag(event, 'text', '${format.id}')">
                          <div class="bg-black/50 backdrop-blur-sm rounded-2xl cursor-grab flex items-center" style="padding: ${scaleFactor * 60}px">
-                            ${format.hasLogo ? `<div style="width:${scaleFactor * 100}px; height:${scaleFactor * 100}px; margin-right:${scaleFactor * 20}px" class="flex-shrink-0">${IFMG_LOGO_SVG_STRING}</div>` : ''}
+                            ${format.hasLogo ? `<div style="width:${scaleFactor * 100}px; height:${scaleFactor * 100}px; margin-right:${scaleFactor * 20}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
                             <div class="flex-grow">
                                 <div id="headline-text-${format.id}" class="text-white font-bold" onclick="startHeadlineEdit('${format.id}')" style="font-size:${scaleFactor * 50}px; line-height:${scaleFactor * 60}px;">
                                     ${state.headline.replace(/\n/g, '<br>') || '&nbsp;'}
@@ -306,7 +306,7 @@ const ImagePreview = (format) => {
                     </div>
                 ` : ''}
                  <button onclick="openCropModal('${format.id}')" class="absolute top-2 right-2 p-2 bg-black/50 rounded-full hover:bg-black/75 transition-colors">
-                     ${CropIcon}
+                     ${constants.CropIcon}
                  </button>
             </div>
         </div>
@@ -341,7 +341,7 @@ const ExportModal = () => `
 `;
 
 const CropModal = () => {
-    const format = FORMATS[state.croppingFormatId];
+    const format = constants.FORMATS[state.croppingFormatId];
     if (!format) return '';
     const transform = state.transforms[format.id];
 
@@ -358,10 +358,10 @@ const CropModal = () => {
                                  style="transform: scale(${transform.zoom}) translate(${transform.position.x}px, ${transform.position.y}px); transition: transform 0.1s ease-out;">
                         </div>
                         <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-11/12 max-w-xs bg-black/50 backdrop-blur-sm rounded-full p-2 flex items-center gap-2 z-10">
-                            ${EditIcon.ZoomOut}
+                            ${constants.EditIcon.ZoomOut}
                             <input type="range" id="zoom-slider" min="1" max="3" step="0.01" value="${transform.zoom}" oninput="handleZoomChange(event)"
                                    class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
-                            ${EditIcon.ZoomIn}
+                            ${constants.EditIcon.ZoomIn}
                         </div>
                     </div>
                 </div>
@@ -383,7 +383,7 @@ function renderApp() {
     if (!state.baseImage) {
         appElement.innerHTML = WelcomeScreen();
     } else {
-        const previewsHTML = Object.values(FORMATS).map(ImagePreview).join('');
+        const previewsHTML = Object.values(constants.FORMATS).map(ImagePreview).join('');
         appElement.innerHTML = `
             <div class="min-h-screen bg-black text-white pb-24">
                 <div class="max-w-2xl mx-auto py-8 px-4">
@@ -394,7 +394,7 @@ function renderApp() {
         `;
         // After rendering, we need to correctly position the text boxes
         // because their height is now known.
-        Object.values(FORMATS).forEach(format => {
+        Object.values(constants.FORMATS).forEach(format => {
             if (format.hasText) {
                 const preview = document.getElementById(`preview-${format.id}`);
                 const box = document.getElementById(`headline-box-${format.id}`);

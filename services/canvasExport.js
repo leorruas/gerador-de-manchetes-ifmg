@@ -1,4 +1,4 @@
-import { IFMG_LOGO_SVG_STRING } from '../constants.js';
+import * as constants from '../constants.js';
 
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
   const words = text.split(' ');
@@ -169,7 +169,7 @@ export async function generateAndDownloadImage(
       const imageLoaded = new Promise(resolve => {
         logoImage.onload = resolve;
         logoImage.onerror = () => resolve(); // Don't block if logo fails
-        logoImage.src = `data:image/svg+xml;base64,${btoa(IFMG_LOGO_SVG_STRING)}`;
+        logoImage.src = `data:image/svg+xml;base64,${btoa(constants.IFMG_LOGO_SVG_STRING)}`;
       });
       await imageLoaded;
       const logoX = boxX + textBoxPadding;
