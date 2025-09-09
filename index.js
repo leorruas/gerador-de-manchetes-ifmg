@@ -1,4 +1,4 @@
-import { FORMATS, IFMGLogoSVG, IFMGCircleLogoSVG, StepIcon, UploadIcon, CropIcon, EditIcon, DragIcon, ExportIcon } from './constants.js';
+import { FORMATS, IFMG_LOGO_SVG_STRING, StepIcon, UploadIcon, CropIcon, EditIcon } from './constants.js';
 import { generateAndDownloadImage } from './services/canvasExport.js';
 
 // --- APPLICATION STATE ---
@@ -90,10 +90,23 @@ window.handleSlugChange = (event) => {
 
 window.handleExport = async (type) => {
     if (!state.baseImage) return;
-    for (const format of Object.values(FORMATS)) {
-        await generateAndDownloadImage(format, state.baseImageElement, state.transforms[format.id], state.headline, state.textVerticalPositions[format.id], state.slug, type);
+    const exportButton = event.target;
+    const originalText = exportButton.innerHTML;
+    exportButton.disabled = true;
+    exportButton.innerHTML = 'Exportando...';
+
+    try {
+        for (const format of Object.values(FORMATS)) {
+            await generateAndDownloadImage(format, state.baseImageElement, state.transforms[format.id], state.headline, state.textVerticalPositions[format.id], state.slug, type);
+        }
+    } catch (e) {
+        console.error("Export failed:", e);
+        alert("Ocorreu um erro durante a exportação. Verifique o console para mais detalhes.");
+    } finally {
+        exportButton.disabled = false;
+        exportButton.innerHTML = originalText;
+        window.closeExportModal();
     }
-    window.closeExportModal();
 };
 
 window.openCropModal = (formatId) => {
@@ -221,9 +234,11 @@ function endDrag() {
 const WelcomeScreen = () => `
     <div class="flex items-center justify-center min-h-screen p-8">
         <div class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 items-center gap-16">
-            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
-                ${IFMGLogoSVG({ className: "h-8 text-white mb-6" })}
-                <h1 class="text-5xl font-bold mb-8">MancheteExpress</h1>
+            <div class="flex flex-col items-center text-center">
+                <div class="mb-8">
+                    <div class="w-32 h-32 mx-auto text-white">${IFMG_LOGO_SVG_STRING}</div>
+                    <h1 class="text-5xl font-bold mt-4">MancheteExpress</h1>
+                </div>
                 <label id="dropzone" for="image-upload" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)"
                     class="w-full p-12 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900">
                     ${UploadIcon}
@@ -265,12 +280,8 @@ const ImagePreview = (format) => {
     const transform = state.transforms[format.id];
     const textVPos = state.textVerticalPositions[format.id];
     
-    // We need to calculate the top position after the element is in the DOM
-    // For the initial render, we estimate. A second render pass could fix it.
-    // Or we calculate it in JS after rendering.
     const previewWidth = Math.min(window.innerWidth - 32, 640);
     const scaleFactor = previewWidth / format.width;
-    const textTopStyle = `top: calc(${textVPos * 100}% - ${textVPos * ( (format.hasLogo ? 100 : 50 * 1.2) * scaleFactor + 120 * scaleFactor) }px);`;
     
     return `
         <div class="mb-8 last:mb-0">
@@ -282,7 +293,7 @@ const ImagePreview = (format) => {
                 ${format.hasText ? `
                     <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" style="transform: translateY(0);" onmousedown="startDrag(event, 'text', '${format.id}')">
                          <div class="bg-black/50 backdrop-blur-sm rounded-2xl cursor-grab flex items-center" style="padding: ${scaleFactor * 60}px">
-                            ${format.hasLogo ? IFMGCircleLogoSVG({ style: `width:${scaleFactor * 100}px; height:${scaleFactor * 100}px; margin-right:${scaleFactor * 20}px`, className: 'flex-shrink-0' }) : ''}
+                            ${format.hasLogo ? `<div style="width:${scaleFactor * 100}px; height:${scaleFactor * 100}px; margin-right:${scaleFactor * 20}px" class="flex-shrink-0">${IFMG_LOGO_SVG_STRING}</div>` : ''}
                             <div class="flex-grow">
                                 <div id="headline-text-${format.id}" class="text-white font-bold" onclick="startHeadlineEdit('${format.id}')" style="font-size:${scaleFactor * 50}px; line-height:${scaleFactor * 60}px;">
                                     ${state.headline.replace(/\n/g, '<br>') || '&nbsp;'}
@@ -321,8 +332,8 @@ const ExportModal = () => `
             </div>
             <p class="text-zinc-400 mb-6">Escolha o formato de exportação:</p>
             <div class="flex gap-4">
-                <button onclick="handleExport('png')" class="flex-1 bg-amber-400 text-black font-bold py-3 rounded-lg hover:bg-amber-500 transition-colors">PNG</button>
-                <button onclick="handleExport('jpeg')" class="flex-1 bg-amber-400 text-black font-bold py-3 rounded-lg hover:bg-amber-500 transition-colors">JPG</button>
+                <button onclick="handleExport('png', event)" class="flex-1 bg-amber-400 text-black font-bold py-3 rounded-lg hover:bg-amber-500 transition-colors disabled:opacity-50">PNG</button>
+                <button onclick="handleExport('jpeg', event)" class="flex-1 bg-amber-400 text-black font-bold py-3 rounded-lg hover:bg-amber-500 transition-colors disabled:opacity-50">JPG</button>
             </div>
             <button onclick="closeExportModal()" class="mt-6 text-red-500 hover:text-red-400 transition-colors">Cancelar</button>
         </div>

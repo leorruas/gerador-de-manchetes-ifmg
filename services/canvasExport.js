@@ -1,4 +1,4 @@
-import { IFMG_CIRCLE_LOGO_SVG_STRING } from '../constants.js';
+import { IFMG_LOGO_SVG_STRING } from '../constants.js';
 
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
   const words = text.split(' ');
@@ -51,6 +51,9 @@ export async function generateAndDownloadImage(
   slug,
   type
 ) {
+  // Ensure the custom font is loaded before using it on the canvas
+  await document.fonts.load('700 10px Archivo');
+
   const canvas = document.createElement('canvas');
   canvas.width = format.width;
   canvas.height = format.height;
@@ -121,7 +124,7 @@ export async function generateAndDownloadImage(
     const textBoxPadding = format.width * 0.0555; // 60px for 1080 width
     const boxX = (format.width - textBoxWidth) / 2;
     
-    ctx.font = `bold ${format.width * 0.0463}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`; // 50px for 1080
+    ctx.font = `bold ${format.width * 0.0463}px Archivo`; // 50px for 1080
     ctx.textBaseline = 'top';
     const lineHeight = format.width * 0.0555; // 60px for 1080
 
@@ -165,7 +168,8 @@ export async function generateAndDownloadImage(
       const logoImage = new Image();
       const imageLoaded = new Promise(resolve => {
         logoImage.onload = resolve;
-        logoImage.src = `data:image/svg+xml;base64,${btoa(IFMG_CIRCLE_LOGO_SVG_STRING)}`;
+        logoImage.onerror = () => resolve(); // Don't block if logo fails
+        logoImage.src = `data:image/svg+xml;base64,${btoa(IFMG_LOGO_SVG_STRING)}`;
       });
       await imageLoaded;
       const logoX = boxX + textBoxPadding;
