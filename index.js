@@ -303,7 +303,7 @@ const ImagePreview = (format) => {
                 ${format.hasText ? `
                     <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" onmousedown="startDrag(event, 'text', '${format.id}')" ontouchstart="startDrag(event, 'text', '${format.id}')">
                          <div class="bg-black/50 backdrop-blur-sm rounded-2xl cursor-grab flex items-center" style="padding: ${scaleFactor * 40}px">
-                            ${format.hasLogo ? `<div style="width:${scaleFactor * 120}px; height:${scaleFactor * 120}px; margin-right:${scaleFactor * 20}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
+                            ${format.hasLogo ? `<div style="width:${scaleFactor * 140}px; height:${scaleFactor * 140}px; margin-right:${scaleFactor * 20}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
                             <div class="flex-grow">
                                 <div id="headline-text-${format.id}" class="text-white font-bold" onclick="startHeadlineEdit('${format.id}')" style="font-size:${scaleFactor * 50}px; line-height:${scaleFactor * 60}px;">
                                     ${state.headline.replace(/\n/g, '<br>') || '&nbsp;'}
@@ -362,7 +362,7 @@ const CropModal = () => {
                     <h2 class="text-xl font-bold text-center">Reenquadrar: ${format.name}</h2>
                 </div>
                 <div class="p-6 flex-1 flex items-center justify-center min-h-0 overflow-hidden">
-                    <div class="relative max-w-full max-h-full" style="aspect-ratio: ${format.width} / ${format.height}">
+                    <div class="relative w-full max-w-full max-h-full" style="aspect-ratio: ${format.width} / ${format.height}">
                         <div id="crop-image-container-${format.id}" class="absolute inset-0 w-full h-full overflow-hidden bg-black rounded-lg cursor-grab" onmousedown="startDrag(event, 'crop', '${format.id}')" ontouchstart="startDrag(event, 'crop', '${format.id}')">
                             <img id="crop-image-${format.id}" src="${state.baseImage}" alt="Crop preview" class="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
                                  style="transform: scale(${transform.zoom}) translate(${transform.position.x}px, ${transform.position.y}px); transition: transform 0.1s ease-out;">

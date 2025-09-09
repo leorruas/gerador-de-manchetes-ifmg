@@ -128,7 +128,7 @@ export async function generateAndDownloadImage(
     ctx.textBaseline = 'top';
     const lineHeight = format.width * 0.0555; // 60px for 1080
 
-    const logoSize = format.width * 0.111; // 120px for 1080
+    const logoSize = format.width * 0.13; // 140px for 1080
     const logoTextPadding = format.width * 0.0185; // 20px for 1080
     let textMaxWidth = textBoxWidth - (textBoxPadding * 2);
     if (format.hasLogo) {
