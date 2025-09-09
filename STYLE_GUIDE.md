@@ -26,7 +26,7 @@ A interface segue uma estética minimalista, limpa e moderna, com um tema escuro
 -   **Modais:** Cantos bem arredondados (`rounded-xl`), sobrepondo o conteúdo com um fundo semi-transparente.
 -   **Áreas de Upload (Dropzones):** Utilizam bordas tracejadas que se tornam sólidas e na cor de ação principal (`#FBBF24`) durante o evento de arrastar (drag-over) para fornecer feedback visual claro.
 -   **Layout:**
-    -   **Tela de Boas-Vindas:** Responsiva, com layout de duas colunas em desktops (upload à esquerda, instruções à direita) e uma única coluna em dispositivos móveis.
+    -   **Tela de Boas-Vindas:** Responsiva, com layout de duas colunas em desktops (upload à esquerda, instruções à direita) e uma única coluna em dispositivos móveis. O logo é posicionado acima do título "MancheteExpress", com um espaçamento generoso entre eles para garantir uma hierarquia visual clara e legibilidade.
     -   **Tela Principal:** Layout de coluna única, centralizado, com controles em uma barra inferior fixa.
 -   **Estados de Foco:** Elementos interativos usam um anel de foco amarelo (`focus:ring-amber-500`) para consistência e acessibilidade.
 

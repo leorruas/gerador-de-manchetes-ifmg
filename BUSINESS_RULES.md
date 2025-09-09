@@ -18,17 +18,17 @@
 
 -   **Logo IFMG Circular:**
     -   Posicionado à esquerda, dentro da caixa de texto.
-    -   Tamanho fixo de 100x100 pixels.
+    -   Tamanho fixo de 120x120 pixels.
     -   A altura da caixa de texto se ajusta para conter o logo.
 -   **Caixa de Texto (Manchete):**
     -   **Visibilidade:** A caixa de texto é exibida imediatamente após o carregamento da imagem de fundo.
     -   Largura fixa de 946 px, alinhada ao centro da imagem.
     -   Altura dinâmica, baseada na quantidade de texto e na presença do logo.
     -   Possibilidade de ajuste vertical (drag and drop) dentro da área segura da imagem.
-    -   **Fonte:** Fonte de sistema (padrão iOS/macOS), 50px, Bold, cor branca.
+    -   **Fonte:** Fonte Archivo, 50px, Bold, cor branca.
     -   **Efeito de Fundo:** Efeito de "glass" (vidro fosco) com cor de fundo `rgba(0, 0, 0, 0.5)` e bordas arredondadas (24px).
 -   **Padding Interno (Caixa de Texto):**
-    -   60px em todos os lados.
+    -   40px em todos os lados.
 
 ### Portais (dos Campi e Principal)
 

@@ -121,14 +121,14 @@ export async function generateAndDownloadImage(
 
   if (format.hasText) {
     const textBoxWidth = format.width * 0.8759; // 946px for 1080 width
-    const textBoxPadding = format.width * 0.0555; // 60px for 1080 width
+    const textBoxPadding = format.width * 0.037; // 40px for 1080 width
     const boxX = (format.width - textBoxWidth) / 2;
     
     ctx.font = `bold ${format.width * 0.0463}px Archivo`; // 50px for 1080
     ctx.textBaseline = 'top';
     const lineHeight = format.width * 0.0555; // 60px for 1080
 
-    const logoSize = format.width * 0.0926; // 100px for 1080
+    const logoSize = format.width * 0.111; // 120px for 1080
     const logoTextPadding = format.width * 0.0185; // 20px for 1080
     let textMaxWidth = textBoxWidth - (textBoxPadding * 2);
     if (format.hasLogo) {
@@ -152,7 +152,7 @@ export async function generateAndDownloadImage(
     // --- End Text Height Calculation ---
     
     const boxContentHeight = format.hasLogo ? Math.max(textHeight, logoSize) : textHeight;
-    const boxHeight = boxContentHeight + textBoxPadding * 1.5;
+    const boxHeight = boxContentHeight + textBoxPadding * 2;
 
     const safeAreaHeight = format.height - boxHeight;
     const boxY = (safeAreaHeight * textVerticalPercent);

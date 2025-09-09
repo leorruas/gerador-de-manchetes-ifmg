@@ -2,6 +2,8 @@
 > **Lembretes para o Assistente:**
 > - Não alterar o conteúdo do SVG do logo (internalizado em `constants.js`) sem instrução explícita.
 > - Lembrar de sempre documentar todas as alterações em todos os arquivos relevantes para evitar inconsistências.
+> - Não alterar a UX/UI do app, a não ser sob requisição
+> - Não deletar esses lembretes aqui.
 
 # MancheteExpress
 

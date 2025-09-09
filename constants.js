@@ -41,7 +41,7 @@ export const FORMATS = {
 };
 
 export const IFMG_LOGO_SVG_STRING = `
-<svg width="183" height="184" viewBox="0 0 183 184" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 183 209" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect x="0.80957" y="0.905273" width="182.19" height="182.19" rx="91.095" fill="white" fill-opacity="0.2"/>
 <path d="M58.7415 147.004L55.687 138.981H55.6381C55.6945 139.617 55.7246 140.371 55.7246 141.246V147.004H54.7578V137.954H56.334L59.1853 145.42H59.2342L62.1082 137.954H63.673V147.004H62.6273V141.174C62.6273 140.503 62.6574 139.78 62.7138 138.996H62.6649L59.5878 147.004H58.7452H58.7415Z" fill="white"/>
 <path d="M65.9033 138.382C65.9033 138.147 65.9597 137.973 66.0764 137.867C66.193 137.761 66.3359 137.704 66.509 137.704C66.682 137.704 66.8137 137.761 66.934 137.871C67.0544 137.981 67.1108 138.155 67.1108 138.386C67.1108 138.617 67.0506 138.791 66.934 138.901C66.8137 139.015 66.6745 139.072 66.509 139.072C66.3359 139.072 66.193 139.015 66.0764 138.901C65.9597 138.787 65.9033 138.617 65.9033 138.386V138.382ZM67.013 147.004H65.9898V140.219H67.013V147.004Z" fill="white"/>
@@ -84,7 +84,7 @@ export const IFMG_LOGO_SVG_STRING = `
 `;
 
 export const UploadIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`;
-export const CropIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10V4a1 1 0 011-1h6m11 14v6a1 1 0 01-1 1h-6M3 14h.01M21 10h-.01M12 3v.01M12 21v-.01M3 21h18" /></svg>`;
+export const CropIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 4H5a1 1 0 00-1 1v2m14-3h2a1 1 0 011 1v2m-3 14v2a1 1 0 01-1 1h-2M4 17v2a1 1 0 001 1h2" /></svg>`;
 
 export const StepIcon = {
     Upload: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>`,

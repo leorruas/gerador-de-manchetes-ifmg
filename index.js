@@ -67,6 +67,7 @@ window.handleNewImage = () => {
     // Reset state to defaults
     state.headline = "Título da notícia ou chamada para a arte";
     state.slug = "noticia-exemplo";
+    state.textVerticalPositions = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: 0.5 }), {});
     state.transforms = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: { zoom: 1, position: { x: 0, y: 0 } } }), {});
     renderApp();
 };
@@ -124,9 +125,12 @@ window.closeCropModal = () => {
 window.saveCrop = () => {
     const formatId = state.croppingFormatId;
     if (formatId) {
-        const zoom = parseFloat(document.getElementById('zoom-slider').value);
-        // The position is already updated in the state by the drag handlers
-        state.transforms[formatId].zoom = zoom;
+        const zoomInput = document.getElementById('zoom-slider');
+        if (zoomInput) {
+            const zoom = parseFloat(zoomInput.value);
+            // The position is already updated in the state by the drag handlers
+            state.transforms[formatId].zoom = zoom;
+        }
     }
     window.closeCropModal();
     renderApp(); // Re-render the main app to show the updated crop
@@ -174,9 +178,9 @@ window.finishHeadlineEdit = (event) => {
 // --- Drag Handlers for Text Box and Crop Image ---
 let dragContext = {};
 
-function startDrag(event, type, formatId) {
+window.startDrag = (event, type, formatId) => {
     event.preventDefault();
-    dragContext = { type, formatId, startX: event.clientX, startY: event.clientY };
+    dragContext = { type, formatId, startX: event.clientX || event.touches[0].clientX, startY: event.clientY || event.touches[0].clientY };
     if (type === 'text') {
         const element = document.getElementById(`headline-box-${formatId}`);
         dragContext.initialTop = element.offsetTop;
@@ -187,21 +191,26 @@ function startDrag(event, type, formatId) {
     }
     window.addEventListener('mousemove', onDrag);
     window.addEventListener('mouseup', endDrag);
-}
+    window.addEventListener('touchmove', onDrag);
+    window.addEventListener('touchend', endDrag);
+};
 
 function onDrag(event) {
     if (!dragContext.type) return;
-    const deltaX = event.clientX - dragContext.startX;
-    const deltaY = event.clientY - dragContext.startY;
+    const currentX = event.clientX || event.touches[0].clientX;
+    const currentY = event.clientY || event.touches[0].clientY;
+    const deltaX = currentX - dragContext.startX;
+    const deltaY = currentY - dragContext.startY;
 
     if (dragContext.type === 'text') {
         const preview = document.getElementById(`preview-${dragContext.formatId}`);
         const box = document.getElementById(`headline-box-${dragContext.formatId}`);
+        if (!preview || !box) return;
         const maxTop = preview.offsetHeight - box.offsetHeight;
         let newTop = dragContext.initialTop + deltaY;
         newTop = Math.max(0, Math.min(newTop, maxTop));
         box.style.top = `${newTop}px`;
-        const newPercentage = maxTop > 0 ? newTop / maxTop : 0;
+        const newPercentage = maxTop > 0 ? newTop / maxTop : 0.5;
         state.textVerticalPositions[dragContext.formatId] = newPercentage;
 
     } else if (dragContext.type === 'crop') {
@@ -212,7 +221,7 @@ function onDrag(event) {
         state.transforms[dragContext.formatId].position = newPos;
         const img = document.getElementById(`crop-image-${dragContext.formatId}`);
         const zoom = state.transforms[dragContext.formatId].zoom;
-        img.style.transform = `scale(${zoom}) translate(${newPos.x}px, ${newPos.y}px)`;
+        if(img) img.style.transform = `scale(${zoom}) translate(${newPos.x}px, ${newPos.y}px)`;
     }
 }
 
@@ -226,6 +235,8 @@ function endDrag() {
     dragContext = {};
     window.removeEventListener('mousemove', onDrag);
     window.removeEventListener('mouseup', endDrag);
+    window.removeEventListener('touchmove', onDrag);
+    window.removeEventListener('touchend', endDrag);
 }
 
 
@@ -234,10 +245,10 @@ function endDrag() {
 const WelcomeScreen = () => `
     <div class="flex items-center justify-center min-h-screen p-8">
         <div class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 items-center gap-16">
-            <div class="flex flex-col items-center text-center">
+            <div class="flex flex-col items-center text-center -mt-16">
                  <div class="flex flex-col items-center mb-8">
-                    <div class="w-32 h-32 text-white">${constants.IFMG_LOGO_SVG_STRING}</div>
-                    <h1 class="text-5xl font-bold mt-4">MancheteExpress</h1>
+                    <div class="w-40 h-40 text-white">${constants.IFMG_LOGO_SVG_STRING}</div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-white mt-12">MancheteExpress</h1>
                 </div>
                 <label id="dropzone" for="image-upload" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)"
                     class="w-full p-12 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900">
@@ -278,7 +289,6 @@ const WelcomeScreen = () => `
 
 const ImagePreview = (format) => {
     const transform = state.transforms[format.id];
-    const textVPos = state.textVerticalPositions[format.id];
     
     const previewWidth = Math.min(window.innerWidth - 32, 640);
     const scaleFactor = previewWidth / format.width;
@@ -291,9 +301,9 @@ const ImagePreview = (format) => {
                      style="transform: scale(${transform.zoom}) translate(${transform.position.x}px, ${transform.position.y}px);">
 
                 ${format.hasText ? `
-                    <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" style="transform: translateY(0);" onmousedown="startDrag(event, 'text', '${format.id}')">
-                         <div class="bg-black/50 backdrop-blur-sm rounded-2xl cursor-grab flex items-center" style="padding: ${scaleFactor * 60}px">
-                            ${format.hasLogo ? `<div style="width:${scaleFactor * 100}px; height:${scaleFactor * 100}px; margin-right:${scaleFactor * 20}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
+                    <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" onmousedown="startDrag(event, 'text', '${format.id}')" ontouchstart="startDrag(event, 'text', '${format.id}')">
+                         <div class="bg-black/50 backdrop-blur-sm rounded-2xl cursor-grab flex items-center" style="padding: ${scaleFactor * 40}px">
+                            ${format.hasLogo ? `<div style="width:${scaleFactor * 120}px; height:${scaleFactor * 120}px; margin-right:${scaleFactor * 20}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
                             <div class="flex-grow">
                                 <div id="headline-text-${format.id}" class="text-white font-bold" onclick="startHeadlineEdit('${format.id}')" style="font-size:${scaleFactor * 50}px; line-height:${scaleFactor * 60}px;">
                                     ${state.headline.replace(/\n/g, '<br>') || '&nbsp;'}
@@ -351,9 +361,9 @@ const CropModal = () => {
                 <div class="p-6 border-b border-zinc-800 flex-shrink-0">
                     <h2 class="text-xl font-bold text-center">Reenquadrar: ${format.name}</h2>
                 </div>
-                <div class="p-6 flex-1 flex items-center justify-center min-h-0">
-                    <div class="relative w-full" style="aspect-ratio: ${format.width} / ${format.height}">
-                        <div id="crop-image-container-${format.id}" class="absolute inset-0 w-full h-full overflow-hidden bg-black rounded-lg cursor-grab" onmousedown="startDrag(event, 'crop', '${format.id}')">
+                <div class="p-6 flex-1 flex items-center justify-center min-h-0 overflow-hidden">
+                    <div class="relative max-w-full max-h-full" style="aspect-ratio: ${format.width} / ${format.height}">
+                        <div id="crop-image-container-${format.id}" class="absolute inset-0 w-full h-full overflow-hidden bg-black rounded-lg cursor-grab" onmousedown="startDrag(event, 'crop', '${format.id}')" ontouchstart="startDrag(event, 'crop', '${format.id}')">
                             <img id="crop-image-${format.id}" src="${state.baseImage}" alt="Crop preview" class="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
                                  style="transform: scale(${transform.zoom}) translate(${transform.position.x}px, ${transform.position.y}px); transition: transform 0.1s ease-out;">
                         </div>
@@ -393,17 +403,20 @@ function renderApp() {
             </div>
         `;
         // After rendering, we need to correctly position the text boxes
-        // because their height is now known.
-        Object.values(constants.FORMATS).forEach(format => {
-            if (format.hasText) {
-                const preview = document.getElementById(`preview-${format.id}`);
-                const box = document.getElementById(`headline-box-${format.id}`);
-                if (preview && box) {
-                    const maxTop = preview.offsetHeight - box.offsetHeight;
-                    const topPosition = maxTop > 0 ? state.textVerticalPositions[format.id] * maxTop : 0;
-                    box.style.top = `${topPosition}px`;
+        // because their height is now known. This needs to be in the next
+        // frame to ensure the DOM is painted and dimensions are available.
+        requestAnimationFrame(() => {
+            Object.values(constants.FORMATS).forEach(format => {
+                if (format.hasText) {
+                    const preview = document.getElementById(`preview-${format.id}`);
+                    const box = document.getElementById(`headline-box-${format.id}`);
+                    if (preview && box) {
+                        const maxTop = preview.offsetHeight - box.offsetHeight;
+                        const topPosition = maxTop > 0 ? state.textVerticalPositions[format.id] * maxTop : 0;
+                        box.style.top = `${topPosition}px`;
+                    }
                 }
-            }
+            });
         });
     }
 }
