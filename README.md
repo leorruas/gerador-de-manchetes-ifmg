@@ -133,4 +133,13 @@ Este projeto foi configurado para ser publicado como um site estático, ideal pa
 
 Após alguns minutos, seu site estará no ar! O link será exibido na mesma página, no formato: `https://<seu-usuario>.github.io/<nome-do-repositorio>/`.
 
-**Nota Técnica:** Para que o código (TypeScript/JSX) funcione diretamente no navegador sem um passo de compilação prévia, o projeto utiliza o **Babel Standalone**. Ele é carregado no `index.html` e transpila o código em tempo real. O script principal foi alterado para `type="text/babel"` para que o Babel possa processá-lo corretamente. Esta abordagem simplifica o deploy em ambientes de hospedagem estática como o GitHub Pages.
+**Nota Técnica:** Para que o código (TypeScript/JSX) funcione diretamente no navegador sem um passo de compilação prévia, o projeto utiliza o **Babel Standalone**. Ele é carregado no `index.html` e transpila o código em tempo real.
+
+Para contornar um problema comum em servidores de arquivos estáticos (como o GitHub Pages) que não enviam o tipo de MIME correto para arquivos `.tsx`, o `index.html` agora contém um pequeno script que:
+1.  Busca o arquivo de entrada (`index.tsx`) como texto.
+2.  Cria uma nova tag `<script>` com o tipo `text/babel`.
+3.  Injeta o código-fonte do `index.tsx` dentro dessa tag.
+
+Isso faz com que o Babel Standalone processe o código corretamente, incluindo seus `imports` para outros módulos, sem que o navegador bloqueie o arquivo inicial por causa do tipo de MIME incorreto.
+
+**Uso do Tailwind CDN:** A versão atual usa o CDN do Tailwind CSS para simplicidade de desenvolvimento. Para um ambiente de produção real, é recomendado instalar o Tailwind como um plugin PostCSS ou usar a Tailwind CLI para gerar um arquivo CSS otimizado. Isso melhora o desempenho e a confiabilidade.
