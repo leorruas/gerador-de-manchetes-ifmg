@@ -202,6 +202,7 @@ async function generateAndDownloadImage(
         }
 
         if (textContent.headline) {
+            ctx.font = `${safeScale * 50}px Archivo`;
             const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `${safeScale * 50}px Archivo`, textContainerWidth);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 60, textContainerWidth, templateStyles.textColor);
             currentY += lines.length * safeScale * 60;
@@ -209,6 +210,7 @@ async function generateAndDownloadImage(
 
         if (textContent.showSubtitleInput !== false && textContent.subtitle) {
             currentY += safeScale * 12;
+            ctx.font = `${safeScale * 28}px Archivo`;
             const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 28}px Archivo`, textContainerWidth);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 36, textContainerWidth, templateStyles.subtitleColor);
         }
@@ -249,6 +251,7 @@ async function generateAndDownloadImage(
             ctx.shadowBlur = safeScale * 12;
             ctx.shadowOffsetY = safeScale * 4;
             
+            ctx.font = `bold ${safeScale * 65}px Archivo`;
             const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `bold ${safeScale * 65}px Archivo`, textW);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 75, textW, templateStyles.textColor, true);
             
@@ -264,6 +267,7 @@ async function generateAndDownloadImage(
             ctx.shadowBlur = safeScale * 8;
             ctx.shadowOffsetY = safeScale * 2;
             
+            ctx.font = `${safeScale * 32}px Archivo`;
             const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 32}px Archivo`, textW);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 42, textW, templateStyles.subtitleColor);
             
@@ -292,6 +296,7 @@ async function generateAndDownloadImage(
         
         if (textContent.headline) {
             const quoteText = textContent.headline;
+            ctx.font = `italic bold ${safeScale * 45}px Archivo`;
             const lines = window.richTextService.parseRichTextToLines(ctx, quoteText, `italic bold ${safeScale * 45}px Archivo`, textW);
             const lineHeight = safeScale * 55;
             
@@ -321,6 +326,7 @@ async function generateAndDownloadImage(
         }
         
         if (textContent.showSubtitleInput !== false && textContent.subtitle) {
+            ctx.font = `${safeScale * 24}px Archivo`;
             const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 24}px Archivo`, textW);
             const subLineHeight = safeScale * 32;
             for (const line of lines) {
@@ -366,6 +372,7 @@ async function generateAndDownloadImage(
         }
 
         if (textContent.headline) {
+            ctx.font = `bold ${safeScale * 35}px Archivo`;
             const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `bold ${safeScale * 35}px Archivo`, textW);
             const lineHeight = safeScale * 42;
             
@@ -380,6 +387,7 @@ async function generateAndDownloadImage(
 
         if (textContent.showSubtitleInput !== false && textContent.subtitle) {
             currentY += safeScale * 16;
+            ctx.font = `${safeScale * 26}px Archivo`;
             const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 26}px Archivo`, textW);
             const subLineHeight = safeScale * 34;
             const paddingX = safeScale * 16;
