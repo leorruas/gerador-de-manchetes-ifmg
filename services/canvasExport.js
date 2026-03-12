@@ -29,6 +29,24 @@ function drawSvgToCanvas(ctx, svgString, x, y, width, height) {
     });
 }
 
+function measureLineWidth(ctx, line) {
+    let width = 0;
+    const baseFont = ctx.font;
+    line.forEach(segment => {
+        let targetFont = baseFont;
+        if (segment.bold || segment.highlight) {
+            if (!targetFont.includes('bold')) targetFont = 'bold ' + targetFont;
+        }
+        if (segment.italic) {
+            if (!targetFont.includes('italic')) targetFont = 'italic ' + targetFont;
+        }
+        ctx.font = targetFont;
+        width += ctx.measureText(segment.text).width;
+    });
+    ctx.font = baseFont;
+    return width;
+}
+
 function drawRoundedRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
