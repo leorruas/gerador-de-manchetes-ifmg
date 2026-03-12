@@ -1,7 +1,7 @@
 (() => {
     const DB_NAME = 'MancheteExpressDB';
     const STORE_NAME = 'history';
-    const DB_VERSION = 1;
+    const DB_VERSION = 2;
     const MAX_HISTORY_ITEMS = 10;
 
     let dbPromise = null;
