@@ -380,6 +380,10 @@ window.handleGlobalKeydown = (event) => {
     }
 };
 
+window.stopEventPropagation = (event) => {
+    event.stopPropagation();
+};
+
 // --- Drag Handlers for Text Box and Crop Image ---
 let dragContext = {};
 
@@ -550,10 +554,10 @@ const ImagePreview = (format) => {
 
                  ${isCropping ? `
                     <div class="absolute inset-0 bg-black/40 pointer-events-none"></div>
-                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-md bg-black/60 backdrop-blur-sm rounded-3xl p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 z-10">
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-md bg-black/60 backdrop-blur-sm rounded-3xl p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 z-10" onmousedown="stopEventPropagation(event)" ontouchstart="stopEventPropagation(event)">
                         <div class="flex items-center gap-2 flex-grow min-w-0">
                             <button aria-label="Diminuir zoom" onclick="adjustZoom(-0.1)" class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-400">-</button>
-                            <input type="range" id="zoom-slider-${format.id}" min="1" max="3" step="0.01" value="${transform.zoom}" oninput="handleZoomChange(event)"
+                            <input type="range" id="zoom-slider-${format.id}" min="1" max="3" step="0.01" value="${transform.zoom}" oninput="handleZoomChange(event)" onmousedown="stopEventPropagation(event)" ontouchstart="stopEventPropagation(event)"
                                    class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
                             <button aria-label="Aumentar zoom" onclick="adjustZoom(0.1)" class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-400">+</button>
                         </div>
