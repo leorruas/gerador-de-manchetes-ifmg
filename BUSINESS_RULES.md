@@ -2,48 +2,109 @@
 
 ## 1. Usuários
 
--   **Jornalistas:** Criam e exportam as imagens.
+-   **Jornalistas / Comunicadores:** Criam e exportam as artes para as redes sociais e portais do IFMG.
 -   **Designers:** Mantêm os templates e a identidade visual (através da manutenção deste app).
+
+---
 
 ## 2. Formatos de Saída
 
-1.  **Instagram Post:** 1080 × 1350
-2.  **Instagram Stories:** 1080 × 1920
-3.  **Portal dos Campi:** 400 × 400
-4.  **Portal Principal:** 743 × 423
+| # | Nome | Dimensões | Texto? | Logo? |
+|---|------|-----------|--------|-------|
+| 1 | Instagram Post | 1080 × 1350 | ✅ | ✅ |
+| 2 | Instagram Stories | 1080 × 1920 | ✅ | ✅ |
+| 3 | Portal dos Campi | 400 × 400 | ❌ | ❌ |
+| 4 | Portal Principal | 743 × 423 | ❌ | ❌ |
 
-## 3. Conteúdo por Formato
+---
 
-### Instagram (Post e Stories)
+## 3. Templates de Arte
 
--   **Logo IFMG Circular:**
-    -   Posicionado à esquerda, dentro da caixa de texto.
-    -   Tamanho fixo de 120x120 pixels.
-    -   A altura da caixa de texto se ajusta para conter o logo.
--   **Caixa de Texto (Manchete):**
-    -   **Visibilidade:** A caixa de texto é exibida imediatamente após o carregamento da imagem de fundo.
-    -   Largura fixa de 946 px, alinhada ao centro da imagem.
-    -   Altura dinâmica, baseada na quantidade de texto e na presença do logo.
-    -   Possibilidade de ajuste vertical (drag and drop) dentro da área segura da imagem.
-    -   **Fonte:** Fonte Archivo, 50px, Bold, cor branca.
-    -   **Efeito de Fundo:** Efeito de "glass" (vidro fosco) com cor de fundo `rgba(0, 0, 0, 0.5)` e bordas arredondadas (24px).
--   **Padding Interno (Caixa de Texto):**
-    -   40px em todos os lados.
+A aplicação oferece **6 templates** selecionáveis, cada um com um layout e identidade visual própria:
 
-### Portais (dos Campi e Principal)
+| ID | Nome | Layout | Uso |
+|----|------|--------|-----|
+| `NEWS` | Notícia institucional | Glass Box (fundo preto) | Notícias em geral |
+| `EVENT` | Evento | Glass Box (fundo azul) | Divulgação de agenda |
+| `NOTICE` | Comunicado | Glass Box (fundo verde escuro) | Avisos oficiais |
+| `HERO` | Capa / Destaque | Gradiente (sem caixa) | Fotos de impacto |
+| `QUOTE` | Citação | Overlay escuro + aspas | Depoimentos e citações |
+| `NUMBER` | Número Destaque | Infográfico centralizado | Rankings, estatísticas |
 
--   Apenas a imagem de fundo, reenquadrada para o formato específico.
--   Não possuem caixa de texto nem logo.
+---
 
-## 4. Regras de Entrada
+## 4. Conteúdo dos Templates com Texto
 
--   **Upload:** O usuário deve fazer o upload de uma imagem base nos formatos JPG, PNG ou WebP, seja clicando na área de upload ou arrastando e soltando o arquivo sobre ela.
--   **Reenquadramento:** A aplicação permite reenquadrar a imagem de fundo individualmente para cada formato. Um modal de edição, acessado por um ícone na pré-visualização, oferece controles de **zoom (slider)** e **posição (drag-and-drop)**.
--   **Edição de Texto:** Nos formatos de Instagram, o usuário edita a manchete diretamente no preview da imagem.
+### Campos editáveis
 
-## 5. Exportação
+-   **Editoria / Sobretítulo (eyebrow):** Campo opcional de texto curto em maiúsculas (ex: "IFMG", "Agenda IFMG"). Pode ser ocultado pelo usuário.
+-   **Manchete:** Campo principal de texto. Suporta formatação rich text inline:
+    -   `**texto**` → **negrito**
+    -   `*texto*` → *itálico*
+    -   `$$texto$$` → destaque em verde (`#22c55e`)
+    -   Quebras de linha manuais com `Enter`
+    -   Cada formato tem sua própria manchete independente, mas há um botão para sincronizar o texto de um formato com os demais.
+-   **Subtítulo:** Campo opcional de apoio textual.
 
--   **Modo:** Exportação em lote de todos os formatos de uma vez.
--   **Seleção de Formato:** Um modal solicita ao usuário que escolha entre PNG ou JPG para a exportação em lote.
--   **Nomenclatura de Arquivo:** Os arquivos são nomeados automaticamente seguindo o padrão `AAAA-MM-DD_ifmg_slug_formato.ext`, onde o `slug` é fornecido pelo usuário no momento da exportação.
-    -   **Exemplo:** `2025-09-09_ifmg-semana-calouros_post-1080x1350.png`
+### Layout Glass Box (NEWS, EVENT, NOTICE)
+
+-   Caixa semi-transparente com efeito glass (backdrop-filter: blur).
+-   Largura: **87.59%** da imagem (946px numa base de 1080px).
+-   Padding interno: **40px** em escala proporcional.
+-   Logo IFMG circular: **140px** (na base 1080px), posicionado à esquerda da caixa de texto.
+-   Posição vertical ajustável via drag-and-drop dentro de uma área segura (5% de margem superior e inferior).
+
+### Layout Gradient (HERO)
+
+-   Sem caixa visível; gradiente escuro ascendente sobreposto à base da imagem.
+-   Manchete em **negrito, 65px**, com sombra de texto.
+-   Logo IFMG opcional (**100px**), posicionado acima do texto.
+
+### Layout Quote (QUOTE)
+
+-   Overlay escuro global (`rgba(0,0,0,0.6)`).
+-   Ícone de aspas em amber.
+-   Manchete em **itálico e negrito, 45px**, centralizada.
+-   Divisória horizontal amber + nome do entrevistado (eyebrow) abaixo.
+
+### Layout Infographic (NUMBER)
+
+-   Overlay escuro (`rgba(0,0,0,0.4)`).
+-   Número/destaque (eyebrow) em tamanho gigante (**140px**), centralizado.
+-   Manchete em **negrito, maiúsculas, 35px**, centralizada.
+-   Painel de fundo para o subtítulo.
+
+---
+
+## 5. Zonas Seguras (Safe Zones)
+
+-   **Instagram Stories:** Indicadores visuais das zonas reservadas para o perfil (10% superior) e interação/stickers (20% inferior). O usuário deve evitar colocar texto nessas áreas.
+
+---
+
+## 6. Reenquadramento de Imagem (Crop)
+
+-   O reenquadramento é feito **in-place**, diretamente sobre o preview de cada formato (sem modal separado).
+-   Ao ativar o modo crop, a imagem fica arrastável, e uma barra de controles aparece na parte inferior do preview.
+-   **Controles:** Slider de zoom (1x a 3x), botões `+` e `-`, arrasto por toque/mouse, e botões "Salvar" e "Cancelar".
+-   Cada formato tem seu próprio estado de crop (zoom + posição X/Y) independente.
+
+---
+
+## 7. Exportação
+
+-   **Exportar Todos:** exporta todos os 4 formatos de uma vez.
+-   **Exportar formato único:** botão "Exportar" em cada preview individual.
+-   **Modal de exportação:** Solicita o `slug` (nome do arquivo) e a escolha do formato de saída (PNG ou JPG).
+-   **Nomenclatura:** `AAAA-MM-DD_ifmg_slug_nome-formato_LARGURAxALTURA.ext`
+    -   Exemplo: `2025-09-09_ifmg_semana-calouros_instagram-post-1080x1350.png`
+-   **Alerta de arquivo pesado:** Se a arte exportada ultrapassar **1,5 MB**, o sistema exibe um alerta nativo pedindo confirmação antes de baixar.
+
+---
+
+## 8. Histórico e Gamificação
+
+-   Toda exportação bem-sucedida salva automaticamente um rascunho no **IndexedDB** local do navegador (máx. 10 itens, os mais antigos são removidos).
+-   O histórico é acessível por um botão na tela inicial e na barra inferior do editor.
+-   Um rascunho pode ser **restaurado** com um clique, voltando o editor ao estado exato do momento da exportação.
+-   **Painel "Seu Impacto":** Exibido na tela inicial após a primeira exportação, mostrando quantas artes foram geradas e o tempo estimado de trabalho economizado (10 min por arte).

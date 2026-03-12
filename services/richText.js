@@ -80,12 +80,15 @@ function trimLine(tokens) {
 }
 
 function measureToken(context, token, baseFont) {
+  const savedFont = context.font;
   let fontStyle = '';
   if (token.italic && !baseFont.includes('italic')) fontStyle += 'italic ';
   if ((token.bold || token.highlight) && !baseFont.includes('bold')) fontStyle += 'bold ';
   
   context.font = `${fontStyle}${baseFont}`;
-  return context.measureText(token.text).width;
+  const width = context.measureText(token.text).width;
+  context.font = savedFont;
+  return width;
 }
 
 function parseRichTextToLines(context, text, baseFont, maxWidth) {
@@ -139,7 +142,11 @@ function parseRichTextToLines(context, text, baseFont, maxWidth) {
 function drawRichTextLines(context, lines, startX, startY, lineHeight, maxWidth, textColor, isShadowed = false) {
   let currentY = startY;
   const oldFont = context.font;
+  const oldBaseline = context.textBaseline;
   const baseFont = context.font;
+  
+  // Always use 'top' baseline so coordinates are predictable (top of the em box)
+  context.textBaseline = 'top';
   
   lines.forEach((line) => {
     let currentX = startX;
@@ -169,6 +176,7 @@ function drawRichTextLines(context, lines, startX, startY, lineHeight, maxWidth,
   });
   
   context.font = oldFont;
+  context.textBaseline = oldBaseline;
 }
 
 // Keep the old buildRichTextLines alias just in case it's used elsewhere for heights

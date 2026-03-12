@@ -420,35 +420,41 @@ async function generateAndDownloadImage(
   }
 
   // Trigger download via Blob to check file size
+  // BUG-020 fix: wrapped in Promise so the async caller properly awaits completion
   const quality = type === 'jpeg' ? 0.9 : 1.0;
   
-  canvas.toBlob((blob) => {
-    if (!blob) {
-       console.error("Falha ao gerar o arquivo de imagem final.");
-       return;
-    }
-    
-    // Size Check in Megabytes
-    const sizeMB = blob.size / (1024 * 1024);
-    
-    if (sizeMB > 1.5) {
-        const proceed = window.confirm(`ATENÇÃO: A arte "${format.name}" gerou um arquivo muito pesado (${sizeMB.toFixed(2)} MB).\n\nArquivos grandes podem deixar o portal lento e prejudicar o carregamento no celular.\n\nDeseja baixar mesmo assim?`);
-        if (!proceed) {
-             console.log("Exportação cancelada devido ao tamanho do arquivo.");
-             return;
-        }
-    }
+  await new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+         console.error("Falha ao gerar o arquivo de imagem final.");
+         resolve();
+         return;
+      }
+      
+      // Size Check in Megabytes
+      const sizeMB = blob.size / (1024 * 1024);
+      
+      if (sizeMB > 1.5) {
+          const proceed = window.confirm(`ATENÇÃO: A arte "${format.name}" gerou um arquivo muito pesado (${sizeMB.toFixed(2)} MB).\n\nArquivos grandes podem deixar o portal lento e prejudicar o carregamento no celular.\n\nDeseja baixar mesmo assim?`);
+          if (!proceed) {
+               console.log("Exportação cancelada devido ao tamanho do arquivo.");
+               resolve();
+               return;
+          }
+      }
 
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.download = getFilename(slug, format, type);
-    link.href = objectUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(objectUrl);
-    
-  }, `image/${type}`, quality);
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = getFilename(slug, format, type);
+      link.href = objectUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+      resolve();
+      
+    }, `image/${type}`, quality);
+  });
 }
 
 window.canvasExportService = {

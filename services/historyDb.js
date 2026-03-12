@@ -17,7 +17,16 @@
                 };
 
                 request.onsuccess = (event) => {
-                    resolve(event.target.result);
+                    const db = event.target.result;
+                    // Double check if store wasn't created despite success (legacy bug)
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        console.warn("Database opened successfully but missing store. Recreating...");
+                        db.close();
+                        indexedDB.deleteDatabase(DB_NAME);
+                        dbPromise = null; 
+                        return resolve(getDB()); // Retry after delete
+                    }
+                    resolve(db);
                 };
 
                 request.onupgradesneeded = (event) => {
@@ -37,7 +46,20 @@
         try {
             const db = await getDB();
             return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                let transaction;
+                try {
+                    transaction = db.transaction([STORE_NAME], 'readwrite');
+                } catch (err) {
+                    if (err.name === 'NotFoundError') {
+                         console.warn("Store not found during transaction. Deleting DB to reset...");
+                         db.close();
+                         indexedDB.deleteDatabase(DB_NAME);
+                         dbPromise = null;
+                         return reject(err);
+                    }
+                    throw err;
+                }
+                
                 const store = transaction.objectStore(STORE_NAME);
 
                 const itemToSave = {
@@ -100,7 +122,13 @@
         try {
             const db = await getDB();
             return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAME], 'readonly');
+                let transaction;
+                try {
+                    transaction = db.transaction([STORE_NAME], 'readonly');
+                } catch (err) {
+                    console.error("Store missing for getHistory. Returning empty array.");
+                    return resolve([]);
+                }
                 const store = transaction.objectStore(STORE_NAME);
                 
                 // Use a cursor to get items reverse-chronologically (newest first)
@@ -116,8 +144,7 @@
                             slug: cursor.value.slug,
                             templateId: cursor.value.templateId,
                             headlines: cursor.value.headlines,
-                            // we don't return the baseImage string here to save memory in the list view unless requested, 
-                            // wait, let's keep it simple and just return it. 
+                            baseImage: cursor.value.baseImage, // BUG-019 fix: expose directly
                             state: cursor.value
                         });
                         cursor.continue();
@@ -138,7 +165,13 @@
         try {
             const db = await getDB();
             return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAME], 'readonly');
+                let transaction;
+                try {
+                    transaction = db.transaction([STORE_NAME], 'readonly');
+                } catch (err) {
+                    console.error("Store missing for getHistoryItem.");
+                    return resolve(null);
+                }
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.get(id);
                 

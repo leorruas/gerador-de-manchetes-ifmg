@@ -289,6 +289,7 @@ window.handleExport = async (type, event) => {
                 state.transforms[format.id],
                 {
                     headline: state.headlines[formatId],
+                    eyebrow: state.eyebrow,
                     subtitle: state.subtitle,
                     templateId: state.templateId,
                     showEyebrowInput: state.showEyebrowInput,
@@ -562,115 +563,9 @@ function endDrag() {
 }
 
 // --- CONTRAST ANALYSIS FUNCTION ---
-async function analyzeContrast(formatId) {
-    if (!state.baseImage) return;
-
-    const format = constants.FORMATS.find(f => f.id === formatId);
-    if (!format || !format.hasText || state.templateId !== 'template1' && state.templateId !== 'template2' && state.templateId !== 'template3') {
-        state.contrastBoost[formatId] = false;
-        return; // Only applies to GLASS_BOX layouts for now
-    }
-
-    const templateStyles = constants.TEMPLATES[state.templateId];
-    if (templateStyles.layoutType !== constants.LAYOUT_TYPE.GLASS_BOX) {
-        state.contrastBoost[formatId] = false;
-        return;
-    }
-
-    const crop = state.cropData[formatId];
-    const boxTransform = state.transforms[formatId]?.text || { position: { x: 0, y: 0 } };
-    
-    // We need to approximate the visual rendering of the box over the cropped image
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    
-    await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = state.baseImage;
-    });
-
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    
-    // Scale everything to a reasonable analysis size to save memory (e.g., width 400px)
-    const analysisWidth = 400;
-    const analysisScale = analysisWidth / format.width;
-    const analysisHeight = Math.round(format.height * analysisScale);
-    
-    canvas.width = analysisWidth;
-    canvas.height = analysisHeight;
-
-    // 1. Draw cropped background
-    const cropScaleContext = Math.max(format.width / img.width, format.height / img.height) * crop.zoom;
-    const drawWidth = img.width * cropScaleContext * analysisScale;
-    const drawHeight = img.height * cropScaleContext * analysisScale;
-    
-    const cropX = (format.width / 2 - crop.x) * analysisScale;
-    const cropY = (format.height / 2 - crop.y) * analysisScale;
-    
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, cropX - drawWidth / 2, cropY - drawHeight / 2, drawWidth, drawHeight);
-
-    // 2. Determine Text Box Area
-    const boxWidthPercent = 0.8759; // w-[87.59%]
-    const boxLeftPercent = 0.062; // left-[6.2%]
-    const boxWidthPx = canvas.width * boxWidthPercent;
-    const boxLeftPx = canvas.width * boxLeftPercent;
-    
-    // Approximate height of the glass box
-    const scaleFactor = Math.min(format.width / 500, format.height / 500); // UI visual scale
-    const basePadding = scaleFactor * 40 * analysisScale;
-    let boxHeightPx = basePadding * 2; // top/bottom padding
-    
-    // Add height for components (approximate, based on analysis scale)
-    if (format.hasLogo) boxHeightPx += (scaleFactor * 60 * analysisScale) + (scaleFactor * 24 * analysisScale); // logo + mb
-    if (state.showEyebrowInput && state.eyebrow) boxHeightPx += (scaleFactor * 28 * analysisScale) + (scaleFactor * 16 * analysisScale); // line-height + mb
-    
-    // Headline text height (rough estimate: 1 line = 50px scaled)
-    boxHeightPx += scaleFactor * 50 * analysisScale * 2; // assume 2 lines roughly
-    
-    if (state.showSubtitleInput && state.subtitle) boxHeightPx += (scaleFactor * 36 * analysisScale) + (scaleFactor * 16 * analysisScale); // line-height + mt
-    
-    // Position Y
-    let boxY = (canvas.height - boxHeightPx) / 2; // Center default
-    boxY += (boxTransform.position.y || 0) * 10 * analysisScale; // Apply transform
-
-    // Clamp box to canvas
-    boxY = Math.max(0, Math.min(boxY, canvas.height - boxHeightPx));
-
-    // 3. Extract pixels
-    try {
-        const imageData = ctx.getImageData(boxLeftPx, boxY, boxWidthPx, boxHeightPx);
-        const data = imageData.data;
-        let totalLuminance = 0;
-        let pixelCount = data.length / 4;
-        
-        // Sampling randomly or full loop to get average brightness
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i+1];
-            const b = data[i+2];
-            // Standard relative luminance (perceived brightness)
-            const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-            totalLuminance += luminance;
-        }
-        
-        const avgLuminance = totalLuminance / pixelCount;
-        
-        // Threshold (0-255). 160 is quite bright.
-        const isBright = avgLuminance > 160;
-        
-        if (state.contrastBoost[formatId] !== isBright) {
-            state.contrastBoost[formatId] = isBright;
-            renderAllPreviews();
-        }
-        
-    } catch (e) {
-        console.warn("Contrast analysis failed: ", e);
-    }
-}
+// NOTE: analyzeContrast was removed (BUG-018) because it referenced state.cropData
+// which no longer exists. The contrastBoost flag in state is still respected by the
+// canvas export engine — it just can't be auto-detected anymore.
 
 // --- HTML TEMPLATE FUNCTIONS ---
 
@@ -913,12 +808,13 @@ const EditorPanel = () => `
                         const bgColor = isGlassBox && template.backgroundColor ? template.backgroundColor.replace('0.85', '1').replace('0.5', '1') : 'transparent';
                         const dotStyle = isGlassBox ? `style="background-color: ${bgColor};"` : '';
                         
+                        const isActive = state.templateId === template.id;
+                        const activeClass = isActive
+                            ? 'bg-amber-400 text-black border border-amber-400'
+                            : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700';
                         return `
                         <button aria-label="Aplicar template ${template.name}" onclick="handleTemplateChange('${template.id}')" 
-                                class="px-5 py-3 sm:px-4 sm:py-2 rounded-full text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 flex items-center gap-2 flex-shrink-0" style="scroll-snap-align: start;"
-                                ${state.templateId === template.id 
-                                    ? 'class="bg-amber-400 text-black border border-amber-400"' 
-                                    : 'class="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700"'}>
+                                class="px-5 py-3 sm:px-4 sm:py-2 rounded-full text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 flex items-center gap-2 flex-shrink-0 ${activeClass}" style="scroll-snap-align: start;">
                             ${isGlassBox ? `<div class="w-3 h-3 rounded-full border border-black/20" ${dotStyle}></div>` : ''}
                             ${!isGlassBox ? `
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1025,7 +921,7 @@ const HistoryModal = () => `
                     
                     return `
                     <div class="bg-black border border-zinc-800 rounded-lg p-4 flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                        <div class="w-16 h-16 bg-zinc-900 rounded-md overflow-hidden flex-shrink-0" style="background-image: url('${item.state.baseImage}'); background-size: cover; background-position: center;"></div>
+                        <div class="w-16 h-16 bg-zinc-900 rounded-md overflow-hidden flex-shrink-0" style="background-image: url('${item.baseImage}'); background-size: cover; background-position: center;"></div>
                         <div class="flex-grow text-left">
                             <h3 class="font-bold text-amber-400 text-lg break-all">${item.slug || 'Sem identificador'}</h3>
                             <p class="text-white text-sm mt-1 max-w-md line-clamp-2">${headlineSnippet}</p>
