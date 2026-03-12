@@ -151,10 +151,33 @@
         }
     }
 
+    // --- GAMIFICATION / STATS ---
+    function getStats() {
+        const statsStr = localStorage.getItem('mancheteExpress_stats');
+        if (statsStr) {
+            try {
+                return JSON.parse(statsStr);
+            } catch (e) {
+                console.error("Erro ao ler estatísticas", e);
+            }
+        }
+        return { artsGenerated: 0, timeSavedMinutes: 0 };
+    }
+
+    function incrementStats() {
+        const stats = getStats();
+        stats.artsGenerated += 1;
+        stats.timeSavedMinutes += 10; // Assume 10 mins saved per art
+        localStorage.setItem('mancheteExpress_stats', JSON.stringify(stats));
+        return stats;
+    }
+
     window.historyService = {
         saveStateToHistory,
         getHistory,
-        getHistoryItem
+        getHistoryItem,
+        getStats,
+        incrementStats
     };
 
 })();
