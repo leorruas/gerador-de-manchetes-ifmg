@@ -14,13 +14,12 @@ const createDefaultTransforms = () =>
         [curr.id]: { zoom: 1, position: { x: 0, y: 0 } }
     }), {});
 
-// --- APPLICATION STATE ---
 let state = {
     baseImage: null,
     baseImageElement: new Image(),
     templateId: DEFAULT_TEMPLATE_ID,
     eyebrow: constants.TEMPLATES[DEFAULT_TEMPLATE_ID].eyebrow,
-    headline: 'Título da notícia ou chamada para a arte',
+    headlines: Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: 'Título da notícia ou chamada para a arte' }), {}),
     subtitle: '',
     slug: 'noticia-exemplo',
     textVerticalPositions: createDefaultPositions(),
@@ -28,6 +27,11 @@ let state = {
     originalTransforms: {}, // To store state before cropping for cancellation
     croppingFormatId: null,
     showExportModal: false,
+    showHistoryModal: false,
+    showEyebrowInput: true,
+    showSubtitleInput: false,
+    contrastBoost: {},
+    historyItems: [],
     exportFormatIds: Object.values(constants.FORMATS).map((format) => format.id),
     feedback: null,
 };
@@ -63,11 +67,14 @@ function persistState() {
             baseImage: state.baseImage,
             templateId: state.templateId,
             eyebrow: state.eyebrow,
-            headline: state.headline,
+            headlines: state.headlines,
             subtitle: state.subtitle,
             slug: state.slug,
             textVerticalPositions: state.textVerticalPositions,
             transforms: state.transforms,
+            showEyebrowInput: state.showEyebrowInput,
+            showSubtitleInput: state.showSubtitleInput,
+            contrastBoost: state.contrastBoost
         };
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToPersist));
     } catch (error) {
@@ -197,7 +204,7 @@ window.handleNewImage = () => {
     // Reset state to defaults
     state.templateId = DEFAULT_TEMPLATE_ID;
     state.eyebrow = constants.TEMPLATES[DEFAULT_TEMPLATE_ID].eyebrow;
-    state.headline = 'Título da notícia ou chamada para a arte';
+    state.headlines = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: 'Título da notícia ou chamada para a arte' }), {});
     state.subtitle = '';
     state.slug = 'noticia-exemplo';
     state.textVerticalPositions = createDefaultPositions();
@@ -228,8 +235,26 @@ window.handleSlugChange = (event) => {
     if(input) input.value = state.slug;
 };
 
-window.handleTemplateChange = (event) => {
-    applyTemplate(event.target.value, false);
+window.toggleEyebrowInput = () => {
+    state.showEyebrowInput = !state.showEyebrowInput;
+    if (!state.showEyebrowInput) {
+        state.eyebrow = '';
+    }
+    schedulePersist();
+    renderApp();
+};
+
+window.toggleSubtitleInput = () => {
+    state.showSubtitleInput = !state.showSubtitleInput;
+    if (!state.showSubtitleInput) {
+        state.subtitle = '';
+    }
+    schedulePersist();
+    renderApp();
+};
+
+window.handleTemplateChange = (templateId) => {
+    applyTemplate(templateId, false);
     schedulePersist();
     renderApp();
 };
@@ -263,10 +288,12 @@ window.handleExport = async (type, event) => {
                 state.baseImageElement,
                 state.transforms[format.id],
                 {
-                    eyebrow: state.eyebrow,
-                    headline: state.headline,
+                    headline: state.headlines[formatId],
                     subtitle: state.subtitle,
                     templateId: state.templateId,
+                    showEyebrowInput: state.showEyebrowInput,
+                    showSubtitleInput: state.showSubtitleInput,
+                    contrastBoost: state.contrastBoost[formatId] || false
                 },
                 state.textVerticalPositions[format.id],
                 state.slug,
@@ -274,6 +301,12 @@ window.handleExport = async (type, event) => {
             );
         }
         showFeedback('Exportação concluída.', 'success');
+        
+        if (window.historyService) {
+            window.historyService.incrementStats();
+            await window.historyService.saveStateToHistory(state);
+        }
+        
     } catch (e) {
         console.error("Export failed:", e);
         showFeedback('Ocorreu um erro durante a exportação. Verifique o console para mais detalhes.', 'error');
@@ -281,6 +314,48 @@ window.handleExport = async (type, event) => {
         exportButton.disabled = false;
         exportButton.innerHTML = originalText;
         window.closeExportModal();
+    }
+};
+
+window.openHistoryModal = async () => {
+    state.showHistoryModal = true;
+    renderModals(); // render modal container immediately (might show loading state)
+    
+    if (window.historyService) {
+        state.historyItems = await window.historyService.getHistory();
+        renderModals(); // render again with data
+    }
+};
+
+window.closeHistoryModal = () => {
+    state.showHistoryModal = false;
+    renderModals();
+};
+
+window.restoreHistoryItem = async (id) => {
+    if (window.historyService) {
+        const item = await window.historyService.getHistoryItem(id);
+        if (item) {
+            // Restore state logic
+            state.baseImage = item.baseImage;
+            state.templateId = item.templateId;
+            state.eyebrow = item.eyebrow;
+            state.headlines = item.headlines;
+            state.subtitle = item.subtitle;
+            state.slug = item.slug;
+            state.textVerticalPositions = item.textVerticalPositions;
+            state.transforms = item.transforms;
+            
+            // Wait for image reload to trigger render
+            state.baseImageElement.onload = () => {
+                showFeedback('Arte restaurada com sucesso!', 'success');
+                renderApp();
+            };
+            state.baseImageElement.src = state.baseImage;
+            
+            schedulePersist();
+            window.closeHistoryModal();
+        }
     }
 };
 
@@ -352,7 +427,7 @@ window.startHeadlineEdit = (formatId) => {
     if (textDiv && textarea) {
         textDiv.style.display = 'none';
         textarea.style.display = 'block';
-        textarea.value = state.headline;
+        textarea.value = state.headlines[formatId];
         textarea.focus();
         textarea.select();
         // Auto-resize textarea
@@ -361,22 +436,37 @@ window.startHeadlineEdit = (formatId) => {
     }
 };
 
-window.updateHeadline = (event) => {
-    state.headline = event.target.value;
+window.updateHeadline = (event, formatId) => {
+    state.headlines[formatId] = event.target.value;
     event.target.style.height = 'auto';
     event.target.style.height = `${event.target.scrollHeight}px`;
     schedulePersist();
 };
 
-window.finishHeadlineEdit = (event) => {
-    state.headline = event.target.value;
+window.finishHeadlineEdit = (event, formatId) => {
+    state.headlines[formatId] = event.target.value;
     schedulePersist();
     renderApp(); // Re-render all previews with the new headline
 };
 
+window.syncHeadline = (event, sourceFormatId) => {
+    event.stopPropagation();
+    const textToSync = state.headlines[sourceFormatId];
+    Object.keys(state.headlines).forEach(id => {
+        state.headlines[id] = textToSync;
+    });
+    schedulePersist();
+    showFeedback('Manchete copiada para todos os formatos.', 'success');
+    renderApp();
+};
+
 window.handleGlobalKeydown = (event) => {
-    if (event.key === 'Escape' && state.showExportModal) {
-        window.closeExportModal();
+    if (event.key === 'Escape') {
+        if (state.showExportModal) {
+            window.closeExportModal();
+        } else if (state.showHistoryModal) {
+            window.closeHistoryModal();
+        }
     }
 };
 
@@ -415,11 +505,25 @@ function onDrag(event) {
         const preview = document.getElementById(`preview-${dragContext.formatId}`);
         const box = document.getElementById(`headline-box-${dragContext.formatId}`);
         if (!preview || !box) return;
-        const maxTop = preview.offsetHeight - box.offsetHeight;
+        
+        // Add Safe Area restrictions (margin)
+        const safeAreaMarginPercent = 0.05; // 5% minimum from top or bottom
+        const marginPx = preview.offsetHeight * safeAreaMarginPercent;
+        
+        const absoluteMinTop = marginPx;
+        const absoluteMaxTop = preview.offsetHeight - box.offsetHeight - marginPx;
+        
+        // Ensure box fits. If it doesn't fit with margins, relax restraints
+        const usableMinTop = Math.min(absoluteMinTop, absoluteMaxTop < absoluteMinTop ? 0 : absoluteMinTop);
+        const usableMaxTop = Math.max(absoluteMaxTop, absoluteMaxTop < absoluteMinTop ? preview.offsetHeight - box.offsetHeight : absoluteMaxTop);
+
         let newTop = dragContext.initialTop + deltaY;
-        newTop = Math.max(0, Math.min(newTop, maxTop));
+        newTop = Math.max(usableMinTop, Math.min(newTop, usableMaxTop));
         box.style.top = `${newTop}px`;
-        const newPercentage = maxTop > 0 ? newTop / maxTop : 0.5;
+        
+        // Calculate percentage within the FULL safe area range (not the absolute range)
+        const range = usableMaxTop - usableMinTop;
+        const newPercentage = range > 0 ? (newTop - usableMinTop) / range : 0.5;
         state.textVerticalPositions[dragContext.formatId] = newPercentage;
 
     } else if (dragContext.type === 'crop') {
@@ -457,10 +561,142 @@ function endDrag() {
     window.removeEventListener('touchend', endDrag);
 }
 
+// --- CONTRAST ANALYSIS FUNCTION ---
+async function analyzeContrast(formatId) {
+    if (!state.baseImage) return;
+
+    const format = constants.FORMATS.find(f => f.id === formatId);
+    if (!format || !format.hasText || state.templateId !== 'template1' && state.templateId !== 'template2' && state.templateId !== 'template3') {
+        state.contrastBoost[formatId] = false;
+        return; // Only applies to GLASS_BOX layouts for now
+    }
+
+    const templateStyles = constants.TEMPLATES[state.templateId];
+    if (templateStyles.layoutType !== constants.LAYOUT_TYPE.GLASS_BOX) {
+        state.contrastBoost[formatId] = false;
+        return;
+    }
+
+    const crop = state.cropData[formatId];
+    const boxTransform = state.transforms[formatId]?.text || { position: { x: 0, y: 0 } };
+    
+    // We need to approximate the visual rendering of the box over the cropped image
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    
+    await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = state.baseImage;
+    });
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    
+    // Scale everything to a reasonable analysis size to save memory (e.g., width 400px)
+    const analysisWidth = 400;
+    const analysisScale = analysisWidth / format.width;
+    const analysisHeight = Math.round(format.height * analysisScale);
+    
+    canvas.width = analysisWidth;
+    canvas.height = analysisHeight;
+
+    // 1. Draw cropped background
+    const cropScaleContext = Math.max(format.width / img.width, format.height / img.height) * crop.zoom;
+    const drawWidth = img.width * cropScaleContext * analysisScale;
+    const drawHeight = img.height * cropScaleContext * analysisScale;
+    
+    const cropX = (format.width / 2 - crop.x) * analysisScale;
+    const cropY = (format.height / 2 - crop.y) * analysisScale;
+    
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, cropX - drawWidth / 2, cropY - drawHeight / 2, drawWidth, drawHeight);
+
+    // 2. Determine Text Box Area
+    const boxWidthPercent = 0.8759; // w-[87.59%]
+    const boxLeftPercent = 0.062; // left-[6.2%]
+    const boxWidthPx = canvas.width * boxWidthPercent;
+    const boxLeftPx = canvas.width * boxLeftPercent;
+    
+    // Approximate height of the glass box
+    const scaleFactor = Math.min(format.width / 500, format.height / 500); // UI visual scale
+    const basePadding = scaleFactor * 40 * analysisScale;
+    let boxHeightPx = basePadding * 2; // top/bottom padding
+    
+    // Add height for components (approximate, based on analysis scale)
+    if (format.hasLogo) boxHeightPx += (scaleFactor * 60 * analysisScale) + (scaleFactor * 24 * analysisScale); // logo + mb
+    if (state.showEyebrowInput && state.eyebrow) boxHeightPx += (scaleFactor * 28 * analysisScale) + (scaleFactor * 16 * analysisScale); // line-height + mb
+    
+    // Headline text height (rough estimate: 1 line = 50px scaled)
+    boxHeightPx += scaleFactor * 50 * analysisScale * 2; // assume 2 lines roughly
+    
+    if (state.showSubtitleInput && state.subtitle) boxHeightPx += (scaleFactor * 36 * analysisScale) + (scaleFactor * 16 * analysisScale); // line-height + mt
+    
+    // Position Y
+    let boxY = (canvas.height - boxHeightPx) / 2; // Center default
+    boxY += (boxTransform.position.y || 0) * 10 * analysisScale; // Apply transform
+
+    // Clamp box to canvas
+    boxY = Math.max(0, Math.min(boxY, canvas.height - boxHeightPx));
+
+    // 3. Extract pixels
+    try {
+        const imageData = ctx.getImageData(boxLeftPx, boxY, boxWidthPx, boxHeightPx);
+        const data = imageData.data;
+        let totalLuminance = 0;
+        let pixelCount = data.length / 4;
+        
+        // Sampling randomly or full loop to get average brightness
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i+1];
+            const b = data[i+2];
+            // Standard relative luminance (perceived brightness)
+            const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+            totalLuminance += luminance;
+        }
+        
+        const avgLuminance = totalLuminance / pixelCount;
+        
+        // Threshold (0-255). 160 is quite bright.
+        const isBright = avgLuminance > 160;
+        
+        if (state.contrastBoost[formatId] !== isBright) {
+            state.contrastBoost[formatId] = isBright;
+            renderAllPreviews();
+        }
+        
+    } catch (e) {
+        console.warn("Contrast analysis failed: ", e);
+    }
+}
 
 // --- HTML TEMPLATE FUNCTIONS ---
 
-const WelcomeScreen = () => `
+const WelcomeScreen = () => {
+    let statsHtml = '';
+    if (window.historyService) {
+        const stats = window.historyService.getStats();
+        if (stats.artsGenerated > 0) {
+            const hours = Math.floor(stats.timeSavedMinutes / 60);
+            const minutes = stats.timeSavedMinutes % 60;
+            let timeStr = '';
+            if (hours > 0) timeStr += `${hours}h `;
+            if (minutes > 0 || hours === 0) timeStr += `${minutes}m`;
+            
+            statsHtml = `
+                <div class="mt-8 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 sm:p-6 w-full max-w-sm flex flex-col items-center text-center shadow-lg transform transition-all hover:scale-105">
+                    <span class="text-3xl mb-2 block">🚀</span>
+                    <h3 class="text-amber-400 font-bold text-lg mb-1">Seu Impacto</h3>
+                    <p class="text-white text-sm">Você já gerou <strong class="text-amber-400 text-lg">${stats.artsGenerated}</strong> artes.</p>
+                    <p class="text-zinc-400 text-xs mt-1">Isso economizou aprox. <strong class="text-white">${timeStr}</strong> de trabalho manual!</p>
+                </div>
+            `;
+        }
+    }
+
+    return `
     <div class="flex items-center justify-center min-h-screen p-6 sm:p-8">
         <div class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 items-center gap-12 lg:gap-16">
             <div class="flex flex-col items-center text-center">
@@ -475,6 +711,15 @@ const WelcomeScreen = () => `
                     <p class="text-sm text-zinc-400">ou clique para selecionar</p>
                     <input id="image-upload" type="file" accept="image/jpeg, image/png, image/webp" class="hidden" onchange="handleImageSelect(event)" />
                 </label>
+                <div class="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-sm">
+                    <button onclick="openHistoryModal()" class="flex-1 bg-zinc-800 text-white font-semibold py-3 px-6 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 border border-zinc-700 flex items-center justify-center gap-2 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Histórico
+                    </button>
+                </div>
+                ${statsHtml}
             </div>
             <div class="w-full">
                 <h2 class="text-2xl font-bold mb-6 text-center lg:text-left">Como usar:</h2>
@@ -489,7 +734,7 @@ const WelcomeScreen = () => `
                     </li>
                     <li class="flex items-start gap-4">
                         <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Edit}</div>
-                        <div><p class="font-bold text-white">3. Edite a manchete</p><p class="text-zinc-400">Clique no texto sobre a imagem para editar a manchete. Use <code>**trecho**</code> para aplicar negrito em partes específicas.</p></div>
+                        <div><p class="font-bold text-white">3. Edite a manchete</p><p class="text-zinc-400">Clique no texto sobre a imagem para editar a manchete. Use <code>**negrito**</code>, <code>*itálico*</code> ou <code>$$verde$$</code> para destacar partes específicas.</p></div>
                     </li>
                     <li class="flex items-start gap-4">
                         <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Drag}</div>
@@ -503,7 +748,8 @@ const WelcomeScreen = () => `
             </div>
         </div>
     </div>
-`;
+    `;
+};
 
 const ImagePreview = (format) => {
     const transform = state.transforms[format.id];
@@ -513,6 +759,8 @@ const ImagePreview = (format) => {
     const previewWidth = Math.min(window.innerWidth - 32, 640);
     const scaleFactor = previewWidth / format.width;
     
+    const templateStyles = constants.TEMPLATES[state.templateId];
+
     return `
         <div class="mb-8 last:mb-0">
             <h3 class="text-lg font-bold text-zinc-400 mb-2">${format.name} (${format.width}x${format.height})</h3>
@@ -526,21 +774,95 @@ const ImagePreview = (format) => {
                      style="width:${imageMetrics ? imageMetrics.widthPercent : 100}%; height:${imageMetrics ? imageMetrics.heightPercent : 100}%; left:${imageMetrics ? imageMetrics.leftPercent : 0}%; top:${imageMetrics ? imageMetrics.topPercent : 0}%;">
 
                 ${format.hasText ? `
+                    ${format.id === 'instagram-story' ? `
+                    <!-- Instagram Story Safe Zones -->
+                    <div class="absolute inset-x-0 top-0 h-[10%] border-b border-dashed border-white/20 bg-black/20 pointer-events-none z-30 flex items-start justify-center pt-4">
+                        <span class="text-white/50 text-xs font-bold uppercase tracking-widest bg-black/40 px-2 py-1 rounded border border-white/10 blur-[0.5px]">Área do Perfil (Evite Textos)</span>
+                    </div>
+                    <div class="absolute inset-x-0 bottom-0 h-[20%] border-t border-dashed border-white/20 bg-black/20 pointer-events-none z-30 flex items-end justify-center pb-8">
+                        <span class="text-white/50 text-xs font-bold uppercase tracking-widest bg-black/40 px-2 py-1 rounded border border-white/10 blur-[0.5px]">Área de Interação (Evite Textos)</span>
+                    </div>
+                    ` : ''}
+                    
+                    ${templateStyles.layoutType === constants.LAYOUT_TYPE.GLASS_BOX ? `
                     <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" onmousedown="startDrag(event, 'text', '${format.id}')" ontouchstart="startDrag(event, 'text', '${format.id}')">
-                         <div class="bg-black/50 backdrop-blur-sm rounded-2xl cursor-grab flex items-center" style="padding: ${scaleFactor * 40}px">
+                         <div class="rounded-2xl cursor-grab flex items-center relative group transition-all duration-300" 
+                              style="padding: ${scaleFactor * 40}px; background-color: ${templateStyles.backgroundColor}; backdrop-filter: ${state.contrastBoost[format.id] ? 'blur(12px) brightness(0.6)' : 'blur(4px)'}; -webkit-backdrop-filter: ${state.contrastBoost[format.id] ? 'blur(12px) brightness(0.6)' : 'blur(4px)'}; ${state.contrastBoost[format.id] ? 'box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);' : ''}">
+
                             ${format.hasLogo ? `<div style="width:${scaleFactor * 140}px; height:${scaleFactor * 140}px; margin-right:${scaleFactor * 20}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
-                            <div class="flex-grow min-w-0 flex flex-col items-start text-left">
-                                ${state.eyebrow ? `<div class="block w-full text-left uppercase tracking-[0.18em] text-zinc-200/90 mb-2" style="font-size:${scaleFactor * 18}px; line-height:${scaleFactor * 24}px;">${state.eyebrow}</div>` : ''}
-                                <div id="headline-text-${format.id}" class="block w-full text-white text-left" onclick="startHeadlineEdit('${format.id}')" style="font-size:${scaleFactor * 50}px; line-height:${scaleFactor * 60}px; text-align: left;">
-                                    ${renderRichTextHtml(state.headline)}
+                            <div class="flex-grow min-w-0 flex flex-col items-start text-left relative">
+                                <button aria-label="Copiar texto para os outros formatos" onclick="syncHeadline(event, '${format.id}')" class="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-amber-400 text-black p-1 rounded-full shadow-md z-20 hover:bg-amber-500 hover:scale-110 active:scale-95 text-xs font-bold" title="Copiar este texto para os demais formatos">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                </button>
+                                ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full text-left uppercase tracking-[0.18em] mb-2" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 18}px; line-height:${scaleFactor * 24}px;">${state.eyebrow}</div>` : ''}
+                                <div id="headline-text-${format.id}" class="block w-full text-left" onclick="startHeadlineEdit('${format.id}')" style="color: ${templateStyles.textColor}; font-size:${scaleFactor * 50}px; line-height:${scaleFactor * 60}px; text-align: left;">
+                                    ${renderRichTextHtml(state.headlines[format.id])}
                                 </div>
-                                <textarea id="headline-textarea-${format.id}" oninput="updateHeadline(event)" onblur="finishHeadlineEdit(event)" 
-                                    class="block w-full bg-transparent text-white text-left resize-none border-none outline-none focus:ring-0 p-0" 
-                                    style="display: none; font-size:${scaleFactor * 50}px; line-height:${scaleFactor * 60}px; text-align: left;"></textarea>
-                                ${state.subtitle ? `<div class="block w-full text-left text-zinc-100/90 mt-3" style="font-size:${scaleFactor * 28}px; line-height:${scaleFactor * 36}px;">${renderRichTextHtml(state.subtitle)}</div>` : ''}
+                                <textarea id="headline-textarea-${format.id}" oninput="updateHeadline(event, '${format.id}')" onblur="finishHeadlineEdit(event, '${format.id}')" 
+                                    class="block w-full bg-transparent text-left resize-none border-none outline-none focus:ring-0 p-0" 
+                                    style="color: ${templateStyles.textColor}; display: none; font-size:${scaleFactor * 50}px; line-height:${scaleFactor * 60}px; text-align: left;"></textarea>
+                                ${state.showSubtitleInput && state.subtitle ? `<div class="block w-full text-left mt-3" style="color: ${templateStyles.subtitleColor}; font-size:${scaleFactor * 28}px; line-height:${scaleFactor * 36}px;">${renderRichTextHtml(state.subtitle)}</div>` : ''}
                             </div>
                         </div>
-                    </div>
+                    </div>` : ''}
+
+                    ${templateStyles.layoutType === constants.LAYOUT_TYPE.GRADIENT ? `
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 directly-to-transparent pointer-events-none" style="top: calc(${imageMetrics ? imageMetrics.topPercent : 0}% + ${(transform.position.y || 0) * 10}px);"></div>
+                    <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" onmousedown="startDrag(event, 'text', '${format.id}')" ontouchstart="startDrag(event, 'text', '${format.id}')">
+                         <div class="cursor-grab flex flex-col items-start relative group" style="padding: ${scaleFactor * 20}px;">
+                            ${format.hasLogo ? `<div style="width:${scaleFactor * 100}px; height:${scaleFactor * 100}px; margin-bottom:${scaleFactor * 20}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
+                            <button aria-label="Copiar texto para os outros formatos" onclick="syncHeadline(event, '${format.id}')" class="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity bg-amber-400 text-black p-1 rounded-full shadow-md z-20 hover:bg-amber-500 hover:scale-110 active:scale-95 text-xs font-bold" title="Copiar este texto para os demais formatos">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            </button>
+                            ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full text-left uppercase tracking-[0.2em] mb-3 font-bold" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 20}px; line-height:${scaleFactor * 26}px;">${state.eyebrow}</div>` : ''}
+                            <div id="headline-text-${format.id}" class="block w-full text-left" onclick="startHeadlineEdit('${format.id}')" style="color: ${templateStyles.textColor}; font-size:${scaleFactor * 65}px; line-height:${scaleFactor * 75}px; text-align: left; font-weight: 700; text-shadow: 0px 4px 12px rgba(0,0,0,0.5);">
+                                ${renderRichTextHtml(state.headlines[format.id])}
+                            </div>
+                            <textarea id="headline-textarea-${format.id}" oninput="updateHeadline(event, '${format.id}')" onblur="finishHeadlineEdit(event, '${format.id}')" 
+                                class="block w-full bg-transparent text-left resize-none border-none outline-none focus:ring-0 p-0 font-bold" 
+                                style="color: ${templateStyles.textColor}; display: none; font-size:${scaleFactor * 65}px; line-height:${scaleFactor * 75}px; text-align: left; text-shadow: 0px 4px 12px rgba(0,0,0,0.5);"></textarea>
+                            ${state.showSubtitleInput && state.subtitle ? `<div class="block w-full text-left mt-4" style="color: ${templateStyles.subtitleColor}; font-size:${scaleFactor * 32}px; line-height:${scaleFactor * 42}px; text-shadow: 0px 2px 8px rgba(0,0,0,0.8);">${renderRichTextHtml(state.subtitle)}</div>` : ''}
+                        </div>
+                    </div>` : ''}
+
+                    ${templateStyles.layoutType === constants.LAYOUT_TYPE.QUOTE ? `
+                    <div class="absolute inset-0 bg-black/60 pointer-events-none"></div>
+                    <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" onmousedown="startDrag(event, 'text', '${format.id}')" ontouchstart="startDrag(event, 'text', '${format.id}')">
+                         <div class="cursor-grab flex flex-col items-center justify-center relative group text-center" style="padding: ${scaleFactor * 40}px;">
+                            <button aria-label="Copiar texto para os outros formatos" onclick="syncHeadline(event, '${format.id}')" class="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity bg-amber-400 text-black p-1 rounded-full shadow-md z-20 hover:bg-amber-500 hover:scale-110 active:scale-95 text-xs font-bold" title="Copiar este texto para os demais formatos">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            </button>
+                            <svg class="mb-4 text-amber-400 opacity-80" style="width: ${scaleFactor * 80}px; height: ${scaleFactor * 80}px;" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                            <div id="headline-text-${format.id}" class="block w-full" onclick="startHeadlineEdit('${format.id}')" style="color: ${templateStyles.textColor}; font-size:${scaleFactor * 45}px; line-height:${scaleFactor * 55}px; text-align: center; font-style: italic; font-weight: 700;">
+                                ${renderRichTextHtml(state.headlines[format.id])}
+                            </div>
+                            <textarea id="headline-textarea-${format.id}" oninput="updateHeadline(event, '${format.id}')" onblur="finishHeadlineEdit(event, '${format.id}')" 
+                                class="block w-full bg-transparent resize-none border-none outline-none focus:ring-0 p-0 text-center" 
+                                style="color: ${templateStyles.textColor}; display: none; font-size:${scaleFactor * 45}px; line-height:${scaleFactor * 55}px; font-style: italic; font-weight: 700;"></textarea>
+                            <div class="w-16 h-1 mt-6 mb-4 bg-amber-400"></div>
+                            ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full font-bold uppercase tracking-widest" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 22}px; line-height:${scaleFactor * 28}px;">${state.eyebrow}</div>` : ''}
+                            ${state.showSubtitleInput && state.subtitle ? `<div class="block w-full mt-2" style="color: ${templateStyles.subtitleColor}; font-size:${scaleFactor * 24}px; line-height:${scaleFactor * 32}px;">${renderRichTextHtml(state.subtitle)}</div>` : ''}
+                        </div>
+                    </div>` : ''}
+                    
+                    ${templateStyles.layoutType === constants.LAYOUT_TYPE.INFOGRAPHIC ? `
+                    <div class="absolute inset-0 bg-black/40 pointer-events-none"></div>
+                    <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" onmousedown="startDrag(event, 'text', '${format.id}')" ontouchstart="startDrag(event, 'text', '${format.id}')">
+                         <div class="cursor-grab flex flex-col items-center justify-center relative group text-center" style="padding: ${scaleFactor * 30}px;">
+                            ${format.hasLogo ? `<div style="width:${scaleFactor * 100}px; height:${scaleFactor * 100}px; margin-bottom:${scaleFactor * 20}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
+                            <button aria-label="Copiar texto para os outros formatos" onclick="syncHeadline(event, '${format.id}')" class="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity bg-amber-400 text-black p-1 rounded-full shadow-md z-20 hover:bg-amber-500 hover:scale-110 active:scale-95 text-xs font-bold" title="Copiar este texto para os demais formatos">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            </button>
+                            ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full font-bold tracking-tight mb-2" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 140}px; line-height:${scaleFactor * 140}px; text-shadow: 0px 4px 12px rgba(0,0,0,0.5);">${state.eyebrow}</div>` : ''}
+                            <div id="headline-text-${format.id}" class="block w-full font-bold uppercase tracking-wider" onclick="startHeadlineEdit('${format.id}')" style="color: ${templateStyles.textColor}; font-size:${scaleFactor * 35}px; line-height:${scaleFactor * 42}px; text-align: center;">
+                                ${renderRichTextHtml(state.headlines[format.id])}
+                            </div>
+                            <textarea id="headline-textarea-${format.id}" oninput="updateHeadline(event, '${format.id}')" onblur="finishHeadlineEdit(event, '${format.id}')" 
+                                class="block w-full bg-transparent resize-none border-none outline-none focus:ring-0 p-0 font-bold uppercase tracking-wider text-center" 
+                                style="color: ${templateStyles.textColor}; display: none; font-size:${scaleFactor * 35}px; line-height:${scaleFactor * 42}px;"></textarea>
+                            ${state.showSubtitleInput && state.subtitle ? `<div class="block w-full mt-4" style="color: ${templateStyles.subtitleColor}; font-size:${scaleFactor * 26}px; line-height:${scaleFactor * 34}px; background-color: rgba(0,0,0,0.5); padding: ${scaleFactor * 8}px ${scaleFactor * 16}px; border-radius: ${scaleFactor * 20}px; display: inline-block;">${renderRichTextHtml(state.subtitle)}</div>` : ''}
+                        </div>
+                    </div>` : ''}
                 ` : ''}
                 
                 ${!isCropping ? `
@@ -574,36 +896,85 @@ const ImagePreview = (format) => {
 
 const ControlsBar = () => `
     <footer class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-zinc-800 p-4 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 sm:gap-4 z-10">
-        <button aria-label="Escolher nova imagem" onclick="handleNewImage()" class="bg-zinc-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400">Nova Imagem</button>
-        <button aria-label="Exportar todos os formatos" onclick="openExportModal()" class="bg-amber-400 text-black font-bold py-3 px-6 rounded-lg hover:bg-amber-500 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-200">Exportar Todos</button>
+        <button aria-label="Histórico de Artes" onclick="openHistoryModal()" class="bg-zinc-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 border border-zinc-700">Histórico</button>
+        <button aria-label="Escolher nova imagem" onclick="handleNewImage()" class="flex-1 sm:flex-none bg-zinc-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400">Nova Imagem</button>
+        <button aria-label="Exportar todos os formatos" onclick="openExportModal()" class="flex-1 sm:flex-none bg-amber-400 text-black font-bold py-3 px-6 rounded-lg hover:bg-amber-500 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-200">Exportar Todos</button>
     </footer>
 `;
 
 const EditorPanel = () => `
-    <section class="mb-6 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 sm:p-5">
+    <section class="mb-6 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 sm:p-5 w-full overflow-hidden">
         <div class="flex flex-col gap-4">
-            <div>
-                <h2 class="text-lg font-bold text-white">Configurações da arte</h2>
-                <p class="text-sm text-zinc-400">Defina template, editoria e subtítulo. A manchete principal continua editável direto no preview.</p>
+            <div class="w-full">
+                <h2 class="text-lg font-bold text-white mb-2">Modelos de Arte</h2>
+                <div class="flex flex-nowrap sm:flex-wrap gap-2 mb-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar" style="scroll-snap-type: x mandatory;">
+                    ${Object.values(constants.TEMPLATES).map((template) => {
+                        const isGlassBox = template.layoutType === constants.LAYOUT_TYPE.GLASS_BOX;
+                        const bgColor = isGlassBox && template.backgroundColor ? template.backgroundColor.replace('0.85', '1').replace('0.5', '1') : 'transparent';
+                        const dotStyle = isGlassBox ? `style="background-color: ${bgColor};"` : '';
+                        
+                        return `
+                        <button aria-label="Aplicar template ${template.name}" onclick="handleTemplateChange('${template.id}')" 
+                                class="px-5 py-3 sm:px-4 sm:py-2 rounded-full text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 flex items-center gap-2 flex-shrink-0" style="scroll-snap-align: start;"
+                                ${state.templateId === template.id 
+                                    ? 'class="bg-amber-400 text-black border border-amber-400"' 
+                                    : 'class="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700"'}>
+                            ${isGlassBox ? `<div class="w-3 h-3 rounded-full border border-black/20" ${dotStyle}></div>` : ''}
+                            ${!isGlassBox ? `
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                                </svg>
+                            ` : ''}
+                            ${template.name}
+                        </button>
+                    `}).join('')}
+                </div>
             </div>
-            <div class="grid gap-4 sm:grid-cols-2">
-                <label class="block">
-                    <span class="mb-2 block text-sm font-medium text-zinc-300">Template institucional</span>
-                    <select aria-label="Selecionar template institucional" onchange="handleTemplateChange(event)" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500">
-                        ${Object.values(constants.TEMPLATES).map((template) => `
-                            <option value="${template.id}" ${state.templateId === template.id ? 'selected' : ''}>${template.name}</option>
-                        `).join('')}
-                    </select>
-                </label>
-                <label class="block">
-                    <span class="mb-2 block text-sm font-medium text-zinc-300">Editoria</span>
-                    <input aria-label="Editar editoria" type="text" value="${state.eyebrow}" oninput="handleEyebrowChange(event)" onblur="commitMetadataChanges()" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Ex: IFMG, Agenda IFMG, Comunicado" />
-                </label>
+            
+            <div class="flex flex-wrap items-center gap-3 border-t border-zinc-800 pt-4">
+                ${!state.showEyebrowInput ? `
+                    <button onclick="toggleEyebrowInput()" class="flex items-center gap-1 text-sm text-zinc-400 hover:text-amber-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        ${constants.TEMPLATES[state.templateId].layoutType === constants.LAYOUT_TYPE.QUOTE ? 'Adicionar Nome do Entrevistado' : 'Adicionar Editoria (ex: IFMG)'}
+                    </button>
+                ` : ''}
+                ${!state.showSubtitleInput ? `
+                    <button onclick="toggleSubtitleInput()" class="flex items-center gap-1 text-sm text-zinc-400 hover:text-amber-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        Adicionar Subtítulo / Apoio
+                    </button>
+                ` : ''}
             </div>
-            <label class="block">
-                <span class="mb-2 block text-sm font-medium text-zinc-300">Subtítulo</span>
-                <textarea aria-label="Editar subtítulo" oninput="handleSubtitleChange(event)" onblur="commitMetadataChanges()" rows="2" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y" placeholder="${constants.TEMPLATES[state.templateId].subtitle}">${state.subtitle}</textarea>
-            </label>
+
+            ${state.showEyebrowInput || state.showSubtitleInput ? `
+                <div class="grid gap-4 sm:grid-cols-2 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
+                    ${state.showEyebrowInput ? `
+                        <label class="block">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="block text-sm font-medium text-zinc-300">
+                                    ${constants.TEMPLATES[state.templateId].layoutType === constants.LAYOUT_TYPE.QUOTE ? 'Nome do Entrevistado' : 'Editoria / Sobretítulo'}
+                                </span>
+                                <button onclick="toggleEyebrowInput()" class="text-zinc-500 hover:text-red-400 transition-colors" title="Remover Campo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
+                                </button>
+                            </div>
+                            <input aria-label="Editar sobtext" type="text" value="${state.eyebrow}" oninput="handleEyebrowChange(event)" onblur="commitMetadataChanges()" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Ex: IFMG, 1º LUGAR, Nome" />
+                        </label>
+                    ` : ''}
+                    
+                    ${state.showSubtitleInput ? `
+                        <label class="block">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="block text-sm font-medium text-zinc-300">Subtítulo</span>
+                                <button onclick="toggleSubtitleInput()" class="text-zinc-500 hover:text-red-400 transition-colors" title="Remover Subtítulo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
+                                </button>
+                            </div>
+                            <textarea aria-label="Editar subtítulo" oninput="handleSubtitleChange(event)" onblur="commitMetadataChanges()" rows="1" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y" placeholder="${constants.TEMPLATES[state.templateId].subtitle}">${state.subtitle}</textarea>
+                        </label>
+                    ` : ''}
+                </div>
+            ` : ''}
         </div>
     </section>
 `;
@@ -625,6 +996,50 @@ const ExportModal = () => `
                 <button aria-label="Exportar em JPG" onclick="handleExport('jpeg', event)" class="flex-1 bg-amber-400 text-black font-bold py-3 rounded-lg hover:bg-amber-500 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-200">JPG</button>
             </div>
             <button aria-label="Cancelar exportação" onclick="closeExportModal()" class="mt-6 text-red-500 hover:text-red-400 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 rounded">Cancelar</button>
+        </div>
+    </div>
+`;
+
+const HistoryModal = () => `
+    <div class="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fade-in p-4">
+        <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Histórico de Artes</h2>
+                <button aria-label="Fechar histórico" onclick="closeHistoryModal()" class="text-zinc-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <div class="flex-grow overflow-y-auto pr-2 space-y-4">
+                ${state.historyItems.length === 0 ? `
+                    <div class="text-center py-10 text-zinc-500">
+                        <p>Nenhuma arte foi exportada ainda.</p>
+                        <p class="text-sm mt-2">Exportar uma arte salvará um rascunho automaticamente aqui.</p>
+                    </div>
+                ` : state.historyItems.map(item => {
+                    const date = new Date(item.timestamp).toLocaleString('pt-BR');
+                    // Get a snippet of the headline. We pick the INSTA_POST headline or the first one available
+                    const firstHeadline = Object.values(item.headlines || {})[0] || 'Sem título';
+                    const headlineSnippet = firstHeadline.length > 50 ? firstHeadline.substring(0, 50) + '...' : firstHeadline;
+                    const templateName = constants.TEMPLATES[item.templateId]?.name || 'Template Desconhecido';
+                    
+                    return `
+                    <div class="bg-black border border-zinc-800 rounded-lg p-4 flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                        <div class="w-16 h-16 bg-zinc-900 rounded-md overflow-hidden flex-shrink-0" style="background-image: url('${item.state.baseImage}'); background-size: cover; background-position: center;"></div>
+                        <div class="flex-grow text-left">
+                            <h3 class="font-bold text-amber-400 text-lg break-all">${item.slug || 'Sem identificador'}</h3>
+                            <p class="text-white text-sm mt-1 max-w-md line-clamp-2">${headlineSnippet}</p>
+                            <p class="text-zinc-500 text-xs mt-2">${date} &bull; ${templateName}</p>
+                        </div>
+                        <div class="mt-4 sm:mt-0 ml-auto flex-shrink-0">
+                            <button aria-label="Restaurar este rascunho" onclick="restoreHistoryItem(${item.id})" class="bg-zinc-800 text-white px-4 py-2 rounded font-semibold hover:bg-zinc-700 focus:ring-2 focus:ring-zinc-400 transition-colors text-sm w-full sm:w-auto">
+                                Restaurar
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>
         </div>
     </div>
 `;
@@ -678,8 +1093,16 @@ function renderApp() {
                     const preview = document.getElementById(`preview-${format.id}`);
                     const box = document.getElementById(`headline-box-${format.id}`);
                     if (preview && box) {
-                        const maxTop = preview.offsetHeight - box.offsetHeight;
-                        const topPosition = maxTop > 0 ? state.textVerticalPositions[format.id] * maxTop : 0;
+                        const safeAreaMarginPercent = 0.05; // 5% minimum from top or bottom
+                        const marginPx = preview.offsetHeight * safeAreaMarginPercent;
+                        const absoluteMinTop = marginPx;
+                        const absoluteMaxTop = preview.offsetHeight - box.offsetHeight - marginPx;
+                        
+                        const usableMinTop = Math.min(absoluteMinTop, absoluteMaxTop < absoluteMinTop ? 0 : absoluteMinTop);
+                        const usableMaxTop = Math.max(absoluteMaxTop, absoluteMaxTop < absoluteMinTop ? preview.offsetHeight - box.offsetHeight : absoluteMaxTop);
+
+                        const range = usableMaxTop - usableMinTop;
+                        const topPosition = range > 0 ? usableMinTop + (state.textVerticalPositions[format.id] * range) : usableMinTop;
                         box.style.top = `${topPosition}px`;
                     }
                 }
@@ -693,6 +1116,8 @@ function renderModals() {
 
     if (state.showExportModal) {
         modalContainerElement.innerHTML = ExportModal();
+    } else if (state.showHistoryModal) {
+        modalContainerElement.innerHTML = HistoryModal();
     } else {
         modalContainerElement.innerHTML = '';
     }
@@ -707,7 +1132,14 @@ if (persistedState) {
         state.templateId = persistedState.templateId;
     }
     state.eyebrow = persistedState.eyebrow ?? state.eyebrow;
-    state.headline = persistedState.headline || state.headline;
+    
+    // Support legacy persistence (headline -> string) vs new (headlines -> object)
+    if (persistedState.headlines) {
+        state.headlines = persistedState.headlines;
+    } else if (persistedState.headline) {
+         state.headlines = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: persistedState.headline }), {});
+    }
+    
     state.subtitle = persistedState.subtitle || state.subtitle;
     state.slug = persistedState.slug || state.slug;
     state.textVerticalPositions = persistedState.textVerticalPositions || state.textVerticalPositions;

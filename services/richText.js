@@ -10,11 +10,67 @@ function escapeHtml(text) {
     .replace(/'/g, '&#39;');
 }
 
-function tokenizeSegment(text, bold) {
+function parseRichText(text) {
+  if (!text) return [];
+  // Split by \n first
+  return text.split('\n').map((paragraph) => {
+    // Split using regex that captures delimiters.
+    // **bold**, *italic*, $$highlight$$
+    const parts = paragraph.split(/(\*\*.*?\*\*|\*[^*]+\*|\$\$.*?\$\$)/g);
+    return parts
+      .filter(Boolean)
+      .map((part) => {
+        let text = part;
+        let bold = false;
+        let italic = false;
+        let highlight = false;
+
+        if (text.startsWith('**') && text.endsWith('**') && text.length >= 4) {
+          bold = true;
+          text = text.slice(2, -2);
+        } else if (text.startsWith('$$') && text.endsWith('$$') && text.length >= 4) {
+          highlight = true;
+          text = text.slice(2, -2);
+        } else if (text.startsWith('*') && text.endsWith('*') && text.length >= 2) {
+          italic = true;
+          text = text.slice(1, -1);
+        }
+
+        return { text, bold, italic, highlight };
+      })
+      .filter((segment) => segment.text.length > 0);
+  });
+}
+
+function renderRichTextHtml(text) {
+  if (!text) return '';
+  return parseRichText(text)
+    .map((paragraph) => {
+      if (paragraph.length === 0) return '<span class="block w-full text-left">&nbsp;</span>';
+
+      const content = paragraph
+        .map((segment) => {
+           let classes = [];
+           if (segment.bold) classes.push('font-bold');
+           if (segment.italic) classes.push('italic');
+           if (segment.highlight) classes.push('text-[#22c55e]', 'font-bold'); // IFMG Green/Emerald
+           
+           if (classes.length === 0) classes.push('font-normal');
+
+           return `<span class="${classes.join(' ')}">${escapeHtml(segment.text)}</span>`;
+        })
+        .join('');
+
+      return `<span class="block w-full text-left">${content}</span>`;
+    })
+    .join('');
+}
+
+function tokenizeSegment(text, bold, italic, highlight) {
   return text
     .split(/(\s+)/)
     .filter(Boolean)
-    .map((part) => ({ text: part, bold, isWhitespace: /^\s+$/.test(part) }));
+    .map((part) => ({ text: part, bold, italic, highlight, isWhitespace: /^\s+$/.test(part) }));
 }
 
 function trimLine(tokens) {
@@ -23,43 +79,24 @@ function trimLine(tokens) {
   return tokens;
 }
 
-function measureToken(context, token, fontSize) {
-  context.font = `${token.bold ? '700' : '400'} ${fontSize}px ${FONT_FAMILY}`;
+function measureToken(context, token, baseFont) {
+  let fontStyle = '';
+  if (token.italic && !baseFont.includes('italic')) fontStyle += 'italic ';
+  if ((token.bold || token.highlight) && !baseFont.includes('bold')) fontStyle += 'bold ';
+  
+  context.font = `${fontStyle}${baseFont}`;
   return context.measureText(token.text).width;
 }
 
-function parseRichText(text) {
-  return text.split('\n').map((paragraph) => {
-    const parts = paragraph.split('**');
-    return parts
-      .map((part, index) => ({
-        text: part,
-        bold: index % 2 === 1,
-      }))
-      .filter((segment) => segment.text.length > 0);
-  });
-}
-
-function renderRichTextHtml(text) {
-  return parseRichText(text)
-    .map((paragraph) => {
-      if (paragraph.length === 0) return '<span class="block w-full text-left">&nbsp;</span>';
-
-      const content = paragraph
-        .map((segment) => `<span class="${segment.bold ? 'font-bold' : 'font-normal'}">${escapeHtml(segment.text)}</span>`)
-        .join('');
-
-      return `<span class="block w-full text-left">${content}</span>`;
-    })
-    .join('');
-}
-
-function buildRichTextLines(context, text, maxWidth, fontSize) {
+function parseRichTextToLines(context, text, baseFont, maxWidth) {
+  if (!text) return [];
   const paragraphs = parseRichText(text);
   const lines = [];
 
+  const oldFont = context.font;
+
   paragraphs.forEach((paragraph, paragraphIndex) => {
-    const tokens = paragraph.flatMap((segment) => tokenizeSegment(segment.text, segment.bold));
+    const tokens = paragraph.flatMap((segment) => tokenizeSegment(segment.text, segment.bold, segment.italic, segment.highlight));
 
     if (tokens.length === 0) {
       lines.push([]);
@@ -68,7 +105,7 @@ function buildRichTextLines(context, text, maxWidth, fontSize) {
       let currentWidth = 0;
 
       tokens.forEach((token) => {
-        const tokenWidth = measureToken(context, token, fontSize);
+        const tokenWidth = measureToken(context, token, baseFont);
         const exceedsWidth = currentWidth + tokenWidth > maxWidth;
 
         if (exceedsWidth && currentLine.length > 0 && !token.isWhitespace) {
@@ -85,7 +122,9 @@ function buildRichTextLines(context, text, maxWidth, fontSize) {
         currentWidth += tokenWidth;
       });
 
-      lines.push(trimLine(currentLine));
+      if (currentLine.length > 0) {
+        lines.push(trimLine(currentLine));
+      }
     }
 
     if (paragraphIndex < paragraphs.length - 1) {
@@ -93,12 +132,55 @@ function buildRichTextLines(context, text, maxWidth, fontSize) {
     }
   });
 
+  context.font = oldFont;
   return lines;
+}
+
+function drawRichTextLines(context, lines, startX, startY, lineHeight, maxWidth, textColor, isShadowed = false) {
+  let currentY = startY;
+  const oldFont = context.font;
+  const baseFont = context.font;
+  
+  lines.forEach((line) => {
+    let currentX = startX;
+    
+    line.forEach((segment) => {
+      let targetFont = baseFont;
+      if (segment.bold || segment.highlight) {
+          if (!targetFont.includes('bold')) targetFont = 'bold ' + targetFont;
+      }
+      if (segment.italic) {
+          if (!targetFont.includes('italic')) targetFont = 'italic ' + targetFont;
+      }
+      
+      context.font = targetFont;
+      
+      if (segment.highlight) {
+          context.fillStyle = '#22c55e'; // IFMG Green highlight
+      } else {
+          context.fillStyle = textColor;
+      }
+
+      context.fillText(segment.text, currentX, currentY);
+      currentX += context.measureText(segment.text).width;
+    });
+    
+    currentY += lineHeight;
+  });
+  
+  context.font = oldFont;
+}
+
+// Keep the old buildRichTextLines alias just in case it's used elsewhere for heights
+function buildRichTextLines(context, text, maxWidth, fontSize) {
+    return parseRichTextToLines(context, text, `${fontSize}px ${FONT_FAMILY}`, maxWidth);
 }
 
 window.richTextService = {
   parseRichText,
   renderRichTextHtml,
   buildRichTextLines,
+  parseRichTextToLines,
+  drawRichTextLines
 };
 })();

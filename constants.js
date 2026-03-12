@@ -45,26 +45,81 @@ const TEMPLATE_ID = {
   NEWS: 'NEWS',
   EVENT: 'EVENT',
   NOTICE: 'NOTICE',
+  HERO: 'HERO',
+  QUOTE: 'QUOTE',
+  NUMBER: 'NUMBER',
+};
+
+const LAYOUT_TYPE = {
+  GLASS_BOX: 'GLASS_BOX',
+  GRADIENT: 'GRADIENT',
+  QUOTE: 'QUOTE',
+  INFOGRAPHIC: 'INFOGRAPHIC',
 };
 
 const TEMPLATES = {
   [TEMPLATE_ID.NEWS]: {
     id: TEMPLATE_ID.NEWS,
     name: 'Notícia institucional',
+    layoutType: LAYOUT_TYPE.GLASS_BOX,
     eyebrow: 'IFMG',
     subtitle: 'Complemento opcional da chamada principal.',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    textColor: '#FFFFFF',
+    eyebrowColor: 'rgba(255, 255, 255, 0.9)',
+    subtitleColor: 'rgba(255, 255, 255, 0.92)'
   },
   [TEMPLATE_ID.EVENT]: {
     id: TEMPLATE_ID.EVENT,
     name: 'Evento',
+    layoutType: LAYOUT_TYPE.GLASS_BOX,
     eyebrow: 'Agenda IFMG',
     subtitle: 'Data, local ou informação de apoio.',
+    backgroundColor: 'rgba(30, 136, 229, 0.85)', // Blue
+    textColor: '#FFFFFF',
+    eyebrowColor: 'rgba(255, 255, 255, 0.95)',
+    subtitleColor: 'rgba(255, 255, 255, 0.95)'
   },
   [TEMPLATE_ID.NOTICE]: {
     id: TEMPLATE_ID.NOTICE,
     name: 'Comunicado',
+    layoutType: LAYOUT_TYPE.GLASS_BOX,
     eyebrow: 'Comunicado oficial',
     subtitle: 'Informação complementar para contextualizar a arte.',
+    backgroundColor: 'rgba(27, 94, 32, 0.85)', // Dark Green
+    textColor: '#FFFFFF',
+    eyebrowColor: 'rgba(255, 255, 255, 0.95)',
+    subtitleColor: 'rgba(255, 255, 255, 0.95)'
+  },
+  [TEMPLATE_ID.HERO]: {
+    id: TEMPLATE_ID.HERO,
+    name: 'Capa / Destaque',
+    layoutType: LAYOUT_TYPE.GRADIENT,
+    eyebrow: 'Reportagem Especial',
+    subtitle: 'Uma fotografia de impacto sem caixa visível.',
+    textColor: '#FFFFFF',
+    eyebrowColor: '#FBBF24', // Amber 400
+    subtitleColor: 'rgba(255, 255, 255, 0.9)'
+  },
+  [TEMPLATE_ID.QUOTE]: {
+    id: TEMPLATE_ID.QUOTE,
+    name: 'Citação',
+    layoutType: LAYOUT_TYPE.QUOTE,
+    eyebrow: 'Nome do Entrevistado',
+    subtitle: 'Cargo ou descrição curta',
+    textColor: '#FFFFFF',
+    eyebrowColor: '#FBBF24', 
+    subtitleColor: 'rgba(255, 255, 255, 0.8)'
+  },
+  [TEMPLATE_ID.NUMBER]: {
+    id: TEMPLATE_ID.NUMBER,
+    name: 'Número Destaque',
+    layoutType: LAYOUT_TYPE.INFOGRAPHIC,
+    eyebrow: '1º LUGAR', // using eyebrow as the big number
+    subtitle: 'Leia mais no portal',
+    textColor: '#FFFFFF',
+    eyebrowColor: '#FFFFFF',
+    subtitleColor: 'rgba(255, 255, 255, 0.8)'
   },
 };
 
@@ -131,6 +186,7 @@ window.appConstants = {
   FormatId,
   FORMATS,
   TEMPLATE_ID,
+  LAYOUT_TYPE,
   TEMPLATES,
   IFMG_LOGO_SVG_STRING,
   UploadIcon,
