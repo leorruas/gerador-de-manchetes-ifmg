@@ -1,11 +1,12 @@
-export const FormatId = {
+(() => {
+const FormatId = {
   INSTA_POST: 'INSTA_POST',
   INSTA_STORY: 'INSTA_STORY',
   PORTAL_CAMPI: 'PORTAL_CAMPI',
   PORTAL_PRINCIPAL: 'PORTAL_PRINCIPAL',
 };
 
-export const FORMATS = {
+const FORMATS = {
   [FormatId.INSTA_POST]: {
     id: FormatId.INSTA_POST,
     name: 'Instagram Post',
@@ -40,7 +41,34 @@ export const FORMATS = {
   },
 };
 
-export const IFMG_LOGO_SVG_STRING = `
+const TEMPLATE_ID = {
+  NEWS: 'NEWS',
+  EVENT: 'EVENT',
+  NOTICE: 'NOTICE',
+};
+
+const TEMPLATES = {
+  [TEMPLATE_ID.NEWS]: {
+    id: TEMPLATE_ID.NEWS,
+    name: 'Notícia institucional',
+    eyebrow: 'IFMG',
+    subtitle: 'Complemento opcional da chamada principal.',
+  },
+  [TEMPLATE_ID.EVENT]: {
+    id: TEMPLATE_ID.EVENT,
+    name: 'Evento',
+    eyebrow: 'Agenda IFMG',
+    subtitle: 'Data, local ou informação de apoio.',
+  },
+  [TEMPLATE_ID.NOTICE]: {
+    id: TEMPLATE_ID.NOTICE,
+    name: 'Comunicado',
+    eyebrow: 'Comunicado oficial',
+    subtitle: 'Informação complementar para contextualizar a arte.',
+  },
+};
+
+const IFMG_LOGO_SVG_STRING = `
 <svg viewBox="0 0 183 183" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect x="0.80957" y="0.905273" width="182.19" height="182.19" rx="91.095" fill="white" fill-opacity="0.2"/>
 <path d="M58.7415 147.004L55.687 138.981H55.6381C55.6945 139.617 55.7246 140.371 55.7246 141.246V147.004H54.7578V137.954H56.334L59.1853 145.42H59.2342L62.1082 137.954H63.673V147.004H62.6273V141.174C62.6273 140.503 62.6574 139.78 62.7138 138.996H62.6649L59.5878 147.004H58.7452H58.7415Z" fill="white"/>
@@ -83,10 +111,10 @@ export const IFMG_LOGO_SVG_STRING = `
 </svg>
 `;
 
-export const UploadIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`;
-export const CropIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 4H5a1 1 0 00-1 1v2m14-3h2a1 1 0 011 1v2m-3 14v2a1 1 0 01-1 1h-2M4 17v2a1 1 0 001 1h2" /></svg>`;
+const UploadIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`;
+const CropIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 2v14a2 2 0 002 2h14"/><path stroke-linecap="round" stroke-linejoin="round" d="M18 22V8a2 2 0 00-2-2H2"/></svg>`;
 
-export const StepIcon = {
+const StepIcon = {
     Upload: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>`,
     Crop: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10V4a1 1 0 011-1h6m11 14v6a1 1 0 01-1 1h-6M3 14h.01M21 10h-.01M12 3v.01M12 21v-.01M3 21h18" /></svg>`,
     Edit: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg>`,
@@ -94,7 +122,20 @@ export const StepIcon = {
     Export: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>`,
 };
 
-export const EditIcon = {
+const EditIcon = {
     ZoomOut: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" /></svg>`,
     ZoomIn: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3h-6" /></svg>`,
 };
+
+window.appConstants = {
+  FormatId,
+  FORMATS,
+  TEMPLATE_ID,
+  TEMPLATES,
+  IFMG_LOGO_SVG_STRING,
+  UploadIcon,
+  CropIcon,
+  StepIcon,
+  EditIcon,
+};
+})();

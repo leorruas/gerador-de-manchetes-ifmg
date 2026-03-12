@@ -1,39 +1,6 @@
-import * as constants from '../constants.js';
-
-/**
- * Calcula como o texto deve ser quebrado em várias linhas, respeitando
- * a largura máxima e as quebras de linha manuais (\n).
- * @param {CanvasRenderingContext2D} context - O contexto do canvas.
- * @param {string} text - O texto a ser processado.
- * @param {number} maxWidth - A largura máxima permitida para uma linha de texto.
- * @returns {string[]} Um array de strings, onde cada string é uma linha de texto.
- */
-function getTextLines(context, text, maxWidth) {
-  const paragraphs = text.split('\n');
-  const lines = [];
-
-  for (const paragraph of paragraphs) {
-    if (paragraph.trim() === '') {
-      lines.push(''); // Manter linhas vazias de parágrafos
-      continue;
-    }
-    const words = paragraph.split(' ');
-    let currentLine = '';
-    for (let i = 0; i < words.length; i++) {
-      const testLine = currentLine + words[i] + ' ';
-      if (context.measureText(testLine.trim()).width > maxWidth && i > 0) {
-        lines.push(currentLine.trim());
-        currentLine = words[i] + ' ';
-      } else {
-        currentLine = testLine;
-      }
-    }
-    if (currentLine.trim() !== '') {
-        lines.push(currentLine.trim());
-    }
-  }
-  return lines;
-}
+(() => {
+const constants = window.appConstants;
+const { buildRichTextLines } = window.richTextService;
 
 
 function getFilename(slug, format, type) {
@@ -57,16 +24,17 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
     ctx.closePath();
 }
 
-export async function generateAndDownloadImage(
+async function generateAndDownloadImage(
   format,
   baseImageElement,
   transform,
-  headline,
+  textContent,
   textVerticalPercent,
   slug,
   type
 ) {
   // Ensure the custom font is loaded before using it on the canvas
+  await document.fonts.load('400 10px Archivo');
   await document.fonts.load('700 10px Archivo');
 
   const canvas = document.createElement('canvas');
@@ -102,26 +70,13 @@ export async function generateAndDownloadImage(
   const invZoom = 1 / transform.zoom;
   srcWidth *= invZoom;
   srcHeight *= invZoom;
-  
-  // Calculate the center point of the original crop area
-  let centerX = srcX + (srcWidth * transform.zoom / 2);
-  let centerY = srcY + (srcHeight * transform.zoom / 2);
 
-  // Apply panning offset relative to the original image dimensions
-  let panX = transform.position.x * (baseImageElement.naturalWidth / format.width);
-  let panY = transform.position.y * (baseImageElement.naturalHeight / format.height);
-
-  // Adjust center based on panning
-  centerX -= panX;
-  centerY -= panY;
-
-  // Recalculate srcX and srcY from the new center
-  srcX = centerX - srcWidth / 2;
-  srcY = centerY - srcHeight / 2;
-
-  // Clamp values to stay within the bounds of the original image
-  srcX = Math.max(0, Math.min(srcX, baseImageElement.naturalWidth - srcWidth));
-  srcY = Math.max(0, Math.min(srcY, baseImageElement.naturalHeight - srcHeight));
+  const maxSrcX = Math.max(0, baseImageElement.naturalWidth - srcWidth);
+  const maxSrcY = Math.max(0, baseImageElement.naturalHeight - srcHeight);
+  const clampedPanX = Math.min(1, Math.max(-1, transform.position.x || 0));
+  const clampedPanY = Math.min(1, Math.max(-1, transform.position.y || 0));
+  srcX = maxSrcX > 0 ? ((clampedPanX + 1) / 2) * maxSrcX : 0;
+  srcY = maxSrcY > 0 ? ((clampedPanY + 1) / 2) * maxSrcY : 0;
   
   ctx.clearRect(0, 0, format.width, format.height);
   ctx.drawImage(
@@ -135,14 +90,21 @@ export async function generateAndDownloadImage(
   ctx.restore();
 
   if (format.hasText) {
+    const eyebrow = textContent.eyebrow || '';
+    const headline = textContent.headline || '';
+    const subtitle = textContent.subtitle || '';
     const textBoxWidth = format.width * 0.8759; // 946px for 1080 width
     const textBoxPadding = format.width * 0.037; // 40px for 1080 width
     const boxX = (format.width - textBoxWidth) / 2;
     
+    const eyebrowFontSize = format.width * 0.0167;
+    const eyebrowLineHeight = format.width * 0.0222;
     const fontSize = format.width * 0.0463; // 50px for 1080
-    ctx.font = `bold ${fontSize}px Archivo`;
     ctx.textBaseline = 'top';
     const lineHeight = format.width * 0.0555; // 60px for 1080
+    const subtitleFontSize = format.width * 0.0259;
+    const subtitleLineHeight = format.width * 0.0333;
+    const sectionGap = format.width * 0.0148;
 
     const logoSize = format.width * 0.13; // 140px for 1080
     const logoTextPadding = format.width * 0.0185; // 20px for 1080
@@ -152,9 +114,17 @@ export async function generateAndDownloadImage(
     }
     
     // --- Text Height Calculation ---
-    const lines = getTextLines(ctx, headline, textMaxWidth);
-    const lineCount = lines.length;
-    const textHeight = lineCount > 0 ? ((lineCount - 1) * lineHeight) + fontSize : 0;
+    const eyebrowLines = eyebrow ? [eyebrow.toUpperCase()] : [];
+    const eyebrowHeight = eyebrowLines.length > 0 ? eyebrowFontSize : 0;
+    const headlineLines = buildRichTextLines(ctx, headline, textMaxWidth, fontSize);
+    const headlineLineCount = headlineLines.length;
+    const headlineHeight = headlineLineCount > 0 ? ((headlineLineCount - 1) * lineHeight) + fontSize : 0;
+    const subtitleLines = subtitle ? buildRichTextLines(ctx, subtitle, textMaxWidth, subtitleFontSize) : [];
+    const subtitleLineCount = subtitleLines.length;
+    const subtitleHeight = subtitleLineCount > 0 ? ((subtitleLineCount - 1) * subtitleLineHeight) + subtitleFontSize : 0;
+    const textHeight = eyebrowHeight + headlineHeight + subtitleHeight
+      + (eyebrowHeight && headlineHeight ? sectionGap : 0)
+      + (subtitleHeight && headlineHeight ? sectionGap : 0);
     // --- End Text Height Calculation ---
     
     const boxContentHeight = format.hasLogo ? Math.max(textHeight, logoSize) : textHeight;
@@ -201,9 +171,46 @@ export async function generateAndDownloadImage(
     // Draw text
     ctx.fillStyle = '#FFFFFF';
     const textY = boxY + (boxHeight - textHeight) / 2;
-    lines.forEach((line, index) => {
-        ctx.fillText(line, textX, textY + (index * lineHeight));
+    let currentTextY = textY;
+
+    if (eyebrowLines.length > 0) {
+      ctx.font = `700 ${eyebrowFontSize}px Archivo`;
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      eyebrowLines.forEach((line) => {
+        ctx.fillText(line, textX, currentTextY);
+        currentTextY += eyebrowLineHeight;
+      });
+      currentTextY += headlineHeight > 0 ? sectionGap : 0;
+    }
+
+    ctx.fillStyle = '#FFFFFF';
+    headlineLines.forEach((line, index) => {
+        let currentX = textX;
+
+        line.forEach((segment) => {
+            ctx.font = `${segment.bold ? '700' : '400'} ${fontSize}px Archivo`;
+            ctx.fillText(segment.text, currentX, currentTextY + (index * lineHeight));
+            currentX += ctx.measureText(segment.text).width;
+        });
     });
+
+    if (headlineHeight > 0) {
+      currentTextY += headlineHeight;
+    }
+
+    if (subtitleHeight > 0) {
+      currentTextY += headlineHeight > 0 ? sectionGap : 0;
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      subtitleLines.forEach((line, index) => {
+        let currentX = textX;
+
+        line.forEach((segment) => {
+          ctx.font = `${segment.bold ? '700' : '400'} ${subtitleFontSize}px Archivo`;
+          ctx.fillText(segment.text, currentX, currentTextY + (index * subtitleLineHeight));
+          currentX += ctx.measureText(segment.text).width;
+        });
+      });
+    }
   }
 
   // Trigger download
@@ -215,3 +222,8 @@ export async function generateAndDownloadImage(
   link.click();
   document.body.removeChild(link);
 }
+
+window.canvasExportService = {
+  generateAndDownloadImage,
+};
+})();

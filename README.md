@@ -1,8 +1,8 @@
-> [!NOTE]
+﻿> [!NOTE]
 > **Lembretes para o Assistente:**
 > - Não alterar o conteúdo do SVG do logo (internalizado em `constants.js`) sem instrução explícita.
 > - Lembrar de sempre documentar todas as alterações em todos os arquivos relevantes para evitar inconsistências.
-> - Não alterar a UX/UI do app, a não ser sob requisição
+> - Não alterar a UX/UI do app, a não ser sob requisição.
 > - Não deletar esses lembretes aqui.
 
 # MancheteExpress
@@ -13,46 +13,61 @@ Uma aplicação para automatizar a criação de imagens institucionais padroniza
 
 ## 2. Funcionalidades Principais
 
--   **Upload de Imagem Flexível:** Permite o envio de imagens nos formatos JPG, PNG e WebP, tanto clicando para selecionar quanto arrastando e soltando o arquivo (drag-and-drop).
--   **Múltiplos Formatos:** Gera automaticamente previews para 4 formatos de saída diferentes: Instagram Post, Instagram Stories, Portal dos Campi e Portal Principal.
--   **Edição de Manchete:** A manchete padrão aparece na imagem assim que ela é carregada, pronta para ser editada pelo usuário.
--   **Logo Institucional:** Inclui o logo circular do IFMG automaticamente nas imagens de Instagram.
--   **Posicionamento Vertical:** A caixa de texto pode ser arrastada verticalmente (drag-and-drop) de forma independente para cada formato.
--   **Reenquadramento de Imagem (Crop):**
-    -   Cada formato de imagem possui uma ferramenta de reenquadramento individual.
-    -   Um modal dedicado permite reposicionar a imagem de fundo arrastando-a e aplicar zoom com um controle deslizante.
--   **Exportação em Lote:** Exporta todas as imagens de uma vez, com um modal para escolher o formato de arquivo (PNG ou JPG).
--   **Nomenclatura Automática:** Os arquivos são nomeados automaticamente seguindo um padrão institucional, com um slug (nome de arquivo) personalizável pelo usuário.
+- **Upload de imagem flexível:** permite o envio de imagens nos formatos JPG, PNG e WebP, tanto clicando para selecionar quanto arrastando e soltando o arquivo.
+- **Múltiplos formatos:** gera automaticamente previews para Instagram Post, Instagram Stories, Portal dos Campi e Portal Principal.
+- **Edição de manchete:** a manchete padrão aparece na imagem assim que ela é carregada, pronta para ser editada pelo usuário.
+- **Logo institucional:** inclui o logo circular do IFMG automaticamente nas imagens de Instagram.
+- **Posicionamento vertical:** a caixa de texto pode ser arrastada verticalmente de forma independente para cada formato.
+- **Reenquadramento de imagem:** cada formato possui uma ferramenta própria de crop, com zoom e reposicionamento.
+- **Exportação em lote ou individual:** permite exportar todos os formatos ou apenas um formato específico.
+- **Persistência local:** salva a edição no navegador para continuar o trabalho depois.
+- **Editorias e subtítulos:** permite complementar a arte com uma linha de editoria e um subtítulo opcional.
+- **Templates institucionais:** traz presets leves para notícia, evento e comunicado.
 
 ## 3. Como Usar
 
-1.  **Envie uma imagem:** Arraste e solte um arquivo na área indicada ou clique para selecionar um do seu computador.
-2.  **Ajuste os formatos:** Reenquadre a imagem para cada formato usando o ícone de alvo.
-3.  **Edite a manchete:** Clique no texto sobre a imagem para editar a manchete (para formatos de Instagram).
-4.  **Ajuste a posição:** Clique e arraste a caixa de texto verticalmente para a posição ideal.
-5.  **Exporte:** Clique em "Exportar Todos", defina um slug (nome de arquivo) e escolha o formato para baixar as imagens.
-
----
+1. Envie uma imagem JPG, PNG ou WebP.
+2. Ajuste o reenquadramento em cada formato.
+3. Edite a manchete diretamente no preview.
+4. Use `**trecho**` para aplicar negrito em partes específicas do texto.
+5. Se quiser, preencha editoria, subtítulo e escolha um template institucional.
+6. Exporte tudo ou apenas um formato específico.
 
 ## 4. Estrutura Técnica
 
-Este projeto foi construído com **HTML, CSS (Tailwind via CDN) e JavaScript puro (Vanilla JS)** para garantir máxima simplicidade, performance e compatibilidade com qualquer serviço de hospedagem de sites estáticos, como o GitHub Pages.
+Este projeto foi consolidado como uma aplicação estática em HTML, CSS (Tailwind via CDN) e JavaScript puro.
 
--   **`index.html`**: A estrutura base da página.
--   **`index.js`**: O arquivo principal que controla todo o estado e a lógica da aplicação, renderizando o HTML dinamicamente.
--   **`constants.js`**: Armazena dados estáticos como as configurações de formato e os SVGs dos logos.
--   **`services/canvasExport.js`**: Contém a lógica para desenhar as imagens no canvas e iniciar o download.
+- `index.html`: estrutura base da página.
+- `index.js`: estado da aplicação, renderização, eventos e persistência local.
+- `constants.js`: formatos, templates, ícones e SVGs institucionais.
+- `services/richText.js`: renderização de texto com suporte a trechos em negrito.
+- `services/canvasExport.js`: exportação final em canvas.
 
-Essa abordagem elimina a necessidade de qualquer processo de compilação (build), transpilação ou dependências complexas, tornando o projeto extremamente leve e fácil de manter.
+Essa abordagem mantém o projeto simples de abrir, testar e publicar, inclusive em ambientes onde não é possível instalar dependências locais.
 
----
+### Estado Atual da Arquitetura
+
+O projeto segue um caminho único: **aplicação estática em JavaScript puro**.
+
+- O `index.html` pode ser aberto diretamente no navegador, sem servidor local.
+- O `package.json` existe apenas como metadado do projeto.
+- A interface foi adaptada para funcionar sem `type="module"` no navegador.
+
+### Melhorias Aplicadas
+
+- Feedback visual inline para upload e exportação, substituindo `alert()`.
+- Persistência com `localStorage` para retomar a edição.
+- Exportação individual por formato além da exportação em lote.
+- Campo de editoria e subtítulo com suporte na prévia e na exportação.
+- Templates institucionais básicos.
+- Ajustes de responsividade para mobile.
+- Acessibilidade mínima com foco visível, `aria-label` e `Esc` para fechar o modal.
 
 ## 5. Deploy no GitHub Pages
 
 Este projeto está pronto para ser publicado diretamente no GitHub Pages.
 
-1.  **Acesse as Configurações:** No seu repositório do GitHub, vá para "Settings" > "Pages".
-2.  **Fonte de Publicação:**
-    -   Selecione "Deploy from a branch".
-    -   Escolha a branch `main` (ou `master`) e a pasta `/(root)`.
-3.  **Salve:** Clique em "Save". O site estará no ar em alguns minutos.
+1. Acesse `Settings > Pages` no repositório.
+2. Em `Build and deployment`, escolha `Deploy from a branch`.
+3. Selecione a branch principal e a pasta `/(root)`.
+4. Salve e aguarde a publicação.
