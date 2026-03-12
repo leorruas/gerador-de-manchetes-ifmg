@@ -10,6 +10,25 @@ function getFilename(slug, format, type) {
   return `${date}_ifmg_${cleanSlug || 'arte'}_${formatSlug}.${type}`;
 }
 
+function drawSvgToCanvas(ctx, svgString, x, y, width, height) {
+    return new Promise((resolve, reject) => {
+        const DOMURL = window.URL || window.webkitURL || window;
+        const svg = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = DOMURL.createObjectURL(svg);
+        const img = new Image();
+        
+        img.onload = function() {
+            ctx.drawImage(img, x, y, width, height);
+            DOMURL.revokeObjectURL(url);
+            resolve();
+        };
+        img.onerror = function(err) {
+            reject(err);
+        };
+        img.src = url;
+    });
+}
+
 function drawRoundedRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
