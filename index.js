@@ -479,7 +479,8 @@ window.stopEventPropagation = (event) => {
 let dragContext = {};
 
 window.startDrag = (event, type, formatId) => {
-    event.preventDefault();
+    // We removed event.preventDefault() here to allow clicks on mobile (BUG-021)
+    // touch-action: none on the elements handles scroll prevention.
     dragContext = { type, formatId, startX: event.clientX || event.touches[0].clientX, startY: event.clientY || event.touches[0].clientY };
     if (type === 'text') {
         const element = document.getElementById(`headline-box-${formatId}`);
