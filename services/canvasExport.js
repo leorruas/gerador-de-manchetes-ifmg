@@ -132,7 +132,7 @@ async function generateAndDownloadImage(
     const textBoxWidth = format.width * 0.8759;
     const boxX = (format.width - textBoxWidth) / 2;
     // Calculate global scaling based on original 1080px base
-    const safeScale = format.width / 1080;
+    const safeScale = (format.width / 1080) * (format.textScale || 1);
     const padding = safeScale * 40;
 
     // --- Box Height & Positioning Setup ---

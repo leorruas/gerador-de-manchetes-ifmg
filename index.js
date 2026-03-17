@@ -653,7 +653,7 @@ const ImagePreview = (format) => {
     const imageMetrics = getPreviewImageMetrics(format, transform);
     
     const previewWidth = Math.min(window.innerWidth - 32, 640);
-    const scaleFactor = previewWidth / format.width;
+    const scaleFactor = (previewWidth / format.width) * (format.textScale || 1);
     
     const templateStyles = constants.TEMPLATES[state.templateId];
 
