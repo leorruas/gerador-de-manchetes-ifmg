@@ -703,7 +703,7 @@ const ImagePreview = (format) => {
                     </div>` : ''}
 
                     ${templateStyles.layoutType === constants.LAYOUT_TYPE.GRADIENT ? `
-                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 directly-to-transparent pointer-events-none" style="top: calc(${imageMetrics ? imageMetrics.topPercent : 0}% + ${(transform.position.y || 0) * 10}px);"></div>
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 to-transparent pointer-events-none" style="top: calc(${imageMetrics ? imageMetrics.topPercent : 0}% + ${(transform.position.y || 0) * 10}px);"></div>
                     <div id="headline-box-${format.id}" class="absolute w-[87.59%] left-[6.2%]" onmousedown="startDrag(event, 'text', '${format.id}')" ontouchstart="startDrag(event, 'text', '${format.id}')">
                          <div class="cursor-grab flex flex-col items-start relative group" style="padding: ${scaleFactor * 20}px;">
                             ${format.hasLogo ? `<div style="width:${scaleFactor * 100}px; height:${scaleFactor * 100}px; margin-bottom:${scaleFactor * 20}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
@@ -1030,16 +1030,19 @@ if (persistedState) {
     }
     state.eyebrow = persistedState.eyebrow ?? state.eyebrow;
     
-    // Support legacy persistence (headline -> string) vs new (headlines -> object)
+    state.subtitle = persistedState.subtitle || state.subtitle;
+    state.slug = persistedState.slug || state.slug;
+    
+    // Merge persisted positions/headlines with defaults for new format support
+    if (persistedState.textVerticalPositions) {
+        state.textVerticalPositions = { ...state.textVerticalPositions, ...persistedState.textVerticalPositions };
+    }
+    
     if (persistedState.headlines) {
-        state.headlines = persistedState.headlines;
+        state.headlines = { ...state.headlines, ...persistedState.headlines };
     } else if (persistedState.headline) {
          state.headlines = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: persistedState.headline }), {});
     }
-    
-    state.subtitle = persistedState.subtitle || state.subtitle;
-    state.slug = persistedState.slug || state.slug;
-    state.textVerticalPositions = persistedState.textVerticalPositions || state.textVerticalPositions;
     if (persistedState.transforms) {
         state.transforms = Object.fromEntries(
             Object.entries(state.transforms).map(([formatId, fallbackTransform]) => {
