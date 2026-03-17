@@ -192,18 +192,18 @@ async function generateAndDownloadImage(
         let currentY = boxY + padding;
 
         if (textContent.showEyebrowInput !== false && textContent.eyebrow) {
-            ctx.font = `${safeScale * 18}px Archivo`;
+            ctx.font = `${safeScale * 22}px Archivo`;
             ctx.fillStyle = templateStyles.eyebrowColor;
             
             // BUG-022: letterSpacing is experimental. Added defensive check.
-            const spacing = safeScale * 0.18 * 18;
+            const spacing = safeScale * 0.18 * 22;
             if (ctx.letterSpacing !== undefined) {
                 ctx.letterSpacing = `${spacing}px`;
             }
             
             ctx.textBaseline = 'top';
             ctx.fillText(textContent.eyebrow.toUpperCase(), currentX, currentY);
-            currentY += safeScale * 24 + safeScale * 8;
+            currentY += safeScale * 28 + safeScale * 8;
             
             if (ctx.letterSpacing !== undefined) {
                 ctx.letterSpacing = "0px";
@@ -246,17 +246,17 @@ async function generateAndDownloadImage(
         const textW = textBoxWidth - padding;
 
         if (textContent.showEyebrowInput !== false && textContent.eyebrow) {
-            ctx.font = `bold ${safeScale * 20}px Archivo`;
+            ctx.font = `bold ${safeScale * 24}px Archivo`;
             ctx.fillStyle = templateStyles.eyebrowColor;
             
-            const spacing = safeScale * 0.2 * 20;
+            const spacing = safeScale * 0.2 * 24;
             if (ctx.letterSpacing !== undefined) {
                 ctx.letterSpacing = `${spacing}px`;
             }
 
             ctx.textBaseline = 'top';
             ctx.fillText(textContent.eyebrow.toUpperCase(), currentX, currentY);
-            currentY += safeScale * 26 + safeScale * 12;
+            currentY += safeScale * 30 + safeScale * 12;
 
             if (ctx.letterSpacing !== undefined) {
                 ctx.letterSpacing = "0px";
@@ -331,10 +331,10 @@ async function generateAndDownloadImage(
         currentY += safeScale * 4 + safeScale * 16;
         
         if (textContent.showEyebrowInput !== false && textContent.eyebrow) {
-            ctx.font = `bold ${safeScale * 22}px Archivo`;
+            ctx.font = `bold ${safeScale * 26}px Archivo`;
             ctx.fillStyle = templateStyles.eyebrowColor;
             
-            const spacing = safeScale * 0.1 * 22;
+            const spacing = safeScale * 0.1 * 26;
             if (ctx.letterSpacing !== undefined) {
                 ctx.letterSpacing = `${spacing}px`;
             }
@@ -347,7 +347,7 @@ async function generateAndDownloadImage(
             if (ctx.letterSpacing !== undefined) {
                 ctx.letterSpacing = "0px";
             }
-            currentY += safeScale * 28 + safeScale * 8; 
+            currentY += safeScale * 32 + safeScale * 8; 
         }
         
         if (textContent.showSubtitleInput !== false && textContent.subtitle) {

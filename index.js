@@ -690,7 +690,7 @@ const ImagePreview = (format) => {
                                 <button aria-label="Copiar texto para os outros formatos" onclick="syncHeadline(event, '${format.id}')" class="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-amber-400 text-black p-1 rounded-full shadow-md z-20 hover:bg-amber-500 hover:scale-110 active:scale-95 text-xs font-bold" title="Copiar este texto para os demais formatos">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                 </button>
-                                ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full text-left uppercase tracking-[0.18em] mb-2" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 18}px; line-height:${scaleFactor * 24}px;">${state.eyebrow}</div>` : ''}
+                                ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full text-left uppercase tracking-[0.18em] mb-2" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 22}px; line-height:${scaleFactor * 28}px;">${state.eyebrow}</div>` : ''}
                                 <div id="headline-text-${format.id}" class="block w-full text-left" onclick="startHeadlineEdit('${format.id}')" style="color: ${templateStyles.textColor}; font-size:${scaleFactor * 50}px; line-height:${scaleFactor * 60}px; text-align: left;">
                                     ${renderRichTextHtml(state.headlines[format.id])}
                                 </div>
@@ -710,7 +710,7 @@ const ImagePreview = (format) => {
                             <button aria-label="Copiar texto para os outros formatos" onclick="syncHeadline(event, '${format.id}')" class="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity bg-amber-400 text-black p-1 rounded-full shadow-md z-20 hover:bg-amber-500 hover:scale-110 active:scale-95 text-xs font-bold" title="Copiar este texto para os demais formatos">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                             </button>
-                            ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full text-left uppercase tracking-[0.2em] mb-3 font-bold" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 20}px; line-height:${scaleFactor * 26}px;">${state.eyebrow}</div>` : ''}
+                            ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full text-left uppercase tracking-[0.2em] mb-3 font-bold" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 24}px; line-height:${scaleFactor * 30}px;">${state.eyebrow}</div>` : ''}
                             <div id="headline-text-${format.id}" class="block w-full text-left" onclick="startHeadlineEdit('${format.id}')" style="color: ${templateStyles.textColor}; font-size:${scaleFactor * 65}px; line-height:${scaleFactor * 75}px; text-align: left; font-weight: 700; text-shadow: 0px 4px 12px rgba(0,0,0,0.5);">
                                 ${renderRichTextHtml(state.headlines[format.id])}
                             </div>
@@ -736,7 +736,7 @@ const ImagePreview = (format) => {
                                 class="block w-full bg-transparent resize-none border-none outline-none focus:ring-0 p-0 text-center" 
                                 style="color: ${templateStyles.textColor}; display: none; font-size:${scaleFactor * 45}px; line-height:${scaleFactor * 55}px; font-style: italic; font-weight: 700;"></textarea>
                             <div class="w-16 h-1 mt-6 mb-4 bg-amber-400"></div>
-                            ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full font-bold uppercase tracking-widest" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 22}px; line-height:${scaleFactor * 28}px;">${state.eyebrow}</div>` : ''}
+                            ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full font-bold uppercase tracking-widest" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 26}px; line-height:${scaleFactor * 32}px;">${state.eyebrow}</div>` : ''}
                             ${state.showSubtitleInput && state.subtitle ? `<div class="block w-full mt-2" style="color: ${templateStyles.subtitleColor}; font-size:${scaleFactor * 24}px; line-height:${scaleFactor * 32}px;">${renderRichTextHtml(state.subtitle)}</div>` : ''}
                         </div>
                     </div>` : ''}
