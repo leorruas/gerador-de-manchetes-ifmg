@@ -11,7 +11,7 @@ const createDefaultPositions = () =>
 const createDefaultTransforms = () =>
     Object.values(constants.FORMATS).reduce((acc, curr) => ({
         ...acc,
-        [curr.id]: { zoom: 1, position: { x: 0, y: 0 } }
+        [curr.id]: { zoom: 1, position: { x: 0, y: 0 }, fitMode: 'cover' }
     }), {});
 
 let state = {
@@ -114,30 +114,65 @@ function getPreviewImageMetrics(format, transform = state.transforms[format.id])
     const containerAspect = format.width / format.height;
     const imageAspect = image.naturalWidth / image.naturalHeight;
 
+    const fitMode = transform.fitMode || 'cover';
+    const zoom = transform.zoom || 1;
+    const containScale = 0.90; // 5% margins around
+    
     let baseWidthPercent = 100;
     let baseHeightPercent = 100;
 
-    if (imageAspect > containerAspect) {
-        baseWidthPercent = (imageAspect / containerAspect) * 100;
+    if (fitMode === 'contain') {
+        if (imageAspect > containerAspect) {
+            baseWidthPercent = 100 * containScale;
+            baseHeightPercent = (containerAspect / imageAspect) * 100 * containScale;
+        } else {
+            baseHeightPercent = 100 * containScale;
+            baseWidthPercent = (imageAspect / containerAspect) * 100 * containScale;
+        }
     } else {
-        baseHeightPercent = (containerAspect / imageAspect) * 100;
+        if (imageAspect > containerAspect) {
+            baseWidthPercent = (imageAspect / containerAspect) * 100;
+            baseHeightPercent = 100;
+        } else {
+            baseHeightPercent = (containerAspect / imageAspect) * 100;
+            baseWidthPercent = 100;
+        }
     }
 
-    const zoom = transform.zoom || 1;
     const widthPercent = baseWidthPercent * zoom;
     const heightPercent = baseHeightPercent * zoom;
+
     const overflowXPercent = Math.max(0, widthPercent - 100);
     const overflowYPercent = Math.max(0, heightPercent - 100);
+    const underflowXPercent = Math.max(0, 100 - widthPercent);
+    const underflowYPercent = Math.max(0, 100 - heightPercent);
+
     const x = clamp(transform.position.x || 0, -1, 1);
     const y = clamp(transform.position.y || 0, -1, 1);
+
+    let leftPercent, topPercent;
+
+    if (widthPercent > 100) {
+        leftPercent = -overflowXPercent / 2 - (x * overflowXPercent / 2);
+    } else {
+        leftPercent = underflowXPercent / 2 + (x * underflowXPercent / 2);
+    }
+    
+    if (heightPercent > 100) {
+        topPercent = -overflowYPercent / 2 - (y * overflowYPercent / 2);
+    } else {
+        topPercent = underflowYPercent / 2 + (y * underflowYPercent / 2);
+    }
 
     return {
         widthPercent,
         heightPercent,
-        leftPercent: -overflowXPercent / 2 - (x * overflowXPercent / 2),
-        topPercent: -overflowYPercent / 2 - (y * overflowYPercent / 2),
+        leftPercent,
+        topPercent,
         overflowXPercent,
         overflowYPercent,
+        underflowXPercent,
+        underflowYPercent
     };
 }
 
@@ -372,7 +407,8 @@ window.toggleCropMode = (formatId) => {
         // Store the original transform state for cancellation
         state.originalTransforms[formatId] = {
             zoom: state.transforms[formatId].zoom,
-            position: { ...state.transforms[formatId].position }
+            position: { ...state.transforms[formatId].position },
+            fitMode: state.transforms[formatId].fitMode || 'cover'
         };
         state.croppingFormatId = formatId;
         schedulePersist();
@@ -392,11 +428,19 @@ window.cancelCropInline = (formatId) => {
     if (state.originalTransforms[formatId]) {
         state.transforms[formatId] = {
             zoom: state.originalTransforms[formatId].zoom,
-            position: { ...state.originalTransforms[formatId].position }
+            position: { ...state.originalTransforms[formatId].position },
+            fitMode: state.originalTransforms[formatId].fitMode || 'cover'
         };
         delete state.originalTransforms[formatId];
     }
     state.croppingFormatId = null;
+    schedulePersist();
+    renderApp();
+};
+
+window.toggleFitMode = (formatId) => {
+    const currentMode = state.transforms[formatId].fitMode || 'cover';
+    state.transforms[formatId].fitMode = currentMode === 'contain' ? 'cover' : 'contain';
     schedulePersist();
     renderApp();
 };
@@ -538,13 +582,17 @@ function onDrag(event) {
         const metrics = preview && format ? getPreviewImageMetrics(format) : null;
 
         if (preview && metrics) {
-            const overflowX = preview.clientWidth * (metrics.overflowXPercent / 100);
-            const overflowY = preview.clientHeight * (metrics.overflowYPercent / 100);
-            newPos.x = overflowX > 0 ? clamp(dragContext.initialPosition.x - ((deltaX * 2) / overflowX), -1, 1) : 0;
-            newPos.y = overflowY > 0 ? clamp(dragContext.initialPosition.y - ((deltaY * 2) / overflowY), -1, 1) : 0;
+            let limitX = metrics.widthPercent > 100 ? preview.clientWidth * (metrics.overflowXPercent / 100) : preview.clientWidth * (metrics.underflowXPercent / 100);
+            let limitY = metrics.heightPercent > 100 ? preview.clientHeight * (metrics.overflowYPercent / 100) : preview.clientHeight * (metrics.underflowYPercent / 100);
+            
+            const signX = metrics.widthPercent > 100 ? -1 : 1;
+            const signY = metrics.heightPercent > 100 ? -1 : 1;
+            
+            newPos.x = limitX > 0 ? clamp(dragContext.initialPosition.x + (signX * (deltaX * 2) / limitX), -1, 1) : 0;
+            newPos.y = limitY > 0 ? clamp(dragContext.initialPosition.y + (signY * (deltaY * 2) / limitY), -1, 1) : 0;
         }
         state.transforms[dragContext.formatId].position = newPos;
-        applyPreviewImageStyles(dragContext.formatId);
+        updateCropPreview(dragContext.formatId);
     }
 }
 
@@ -666,8 +714,8 @@ const ImagePreview = (format) => {
                  onmousedown="${isCropping ? `startDrag(event, 'crop', '${format.id}')` : ''}"
                  ontouchstart="${isCropping ? `startDrag(event, 'crop', '${format.id}')` : ''}">
                 
-                <img id="preview-image-${format.id}" src="${state.baseImage}" alt="Preview ${format.name}" class="absolute pointer-events-none max-w-none" 
-                     style="width:${imageMetrics ? imageMetrics.widthPercent : 100}%; height:${imageMetrics ? imageMetrics.heightPercent : 100}%; left:${imageMetrics ? imageMetrics.leftPercent : 0}%; top:${imageMetrics ? imageMetrics.topPercent : 0}%;">
+                <img id="preview-image-${format.id}" src="${state.baseImage}" alt="Preview ${format.name}" class="absolute pointer-events-none max-w-none shadow-xl" 
+                     style="width:${imageMetrics ? imageMetrics.widthPercent : 100}%; height:${imageMetrics ? imageMetrics.heightPercent : 100}%; left:${imageMetrics ? imageMetrics.leftPercent : 0}%; top:${imageMetrics ? imageMetrics.topPercent : 0}%; border-radius: ${transform.fitMode === 'contain' ? (previewWidth * 0.03) + 'px' : '0'}; object-fit: cover;">
 
                 ${format.hasText ? `
                     ${format.id === 'instagram-story' ? `
@@ -762,12 +810,17 @@ const ImagePreview = (format) => {
                 ` : ''}
                 
                 ${!isCropping ? `
-                 <button aria-label="Exportar ${format.name}" onclick="openExportModal('${format.id}')" class="absolute top-2 right-14 px-3 py-2 text-xs font-semibold bg-black/50 rounded-full hover:bg-black/75 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
-                     Exportar
-                 </button>
-                 <button aria-label="Reenquadrar ${format.name}" onclick="toggleCropMode('${format.id}')" class="absolute top-2 right-2 p-2 bg-black/50 rounded-full hover:bg-black/75 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
-                     ${constants.CropIcon}
-                 </button>
+                 <div class="absolute top-2 right-2 flex gap-2 z-20">
+                     <button aria-label="Alterar Preenchimento" onclick="toggleFitMode('${format.id}')" class="px-4 py-2 text-xs font-semibold bg-black/60 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
+                         ${transform.fitMode === 'contain' ? 'Fundo Preto' : 'Ajustar à tela'}
+                     </button>
+                     <button aria-label="Exportar ${format.name}" onclick="openExportModal('${format.id}')" class="px-4 py-2 text-xs font-semibold bg-black/60 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
+                         Exportar
+                     </button>
+                     <button aria-label="Reenquadrar ${format.name}" onclick="toggleCropMode('${format.id}')" class="p-2 bg-black/60 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
+                         ${constants.CropIcon}
+                     </button>
+                 </div>
                  ` : ''}
 
                  ${isCropping ? `
@@ -779,7 +832,7 @@ const ImagePreview = (format) => {
                                    class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
                             <button aria-label="Aumentar zoom" onclick="adjustZoom(0.1)" class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-400">+</button>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 w-full sm:w-auto">
                             <button aria-label="Cancelar reenquadramento ${format.name}" onclick="cancelCropInline('${format.id}')" class="flex-1 bg-zinc-700 text-white font-semibold py-2 px-3 rounded-full text-sm hover:bg-zinc-600 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400">Cancelar</button>
                             <button aria-label="Salvar reenquadramento ${format.name}" onclick="saveCropInline('${format.id}')" class="flex-1 bg-amber-400 text-black font-bold py-2 px-3 rounded-full text-sm hover:bg-amber-500 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-200">Salvar</button>
                         </div>

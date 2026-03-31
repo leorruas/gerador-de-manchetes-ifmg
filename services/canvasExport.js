@@ -89,40 +89,71 @@ async function generateAndDownloadImage(
 
   const containerAspectRatio = format.width / format.height;
   const imageAspectRatio = baseImageElement.naturalWidth / baseImageElement.naturalHeight;
+  const fitMode = transform.fitMode || 'cover';
   
-  let srcWidth, srcHeight, srcX, srcY;
+  let baseWidth, baseHeight;
 
-  if (containerAspectRatio > imageAspectRatio) {
-    srcWidth = baseImageElement.naturalWidth;
-    srcHeight = srcWidth / containerAspectRatio;
-    srcX = 0;
-    srcY = (baseImageElement.naturalHeight - srcHeight) / 2;
+  if (fitMode === 'contain') {
+      const containScale = 0.90; // 5% border around
+      if (imageAspectRatio > containerAspectRatio) {
+          baseWidth = format.width * containScale;
+          baseHeight = (format.width / imageAspectRatio) * containScale;
+      } else {
+          baseHeight = format.height * containScale;
+          baseWidth = (format.height * imageAspectRatio) * containScale;
+      }
   } else {
-    srcHeight = baseImageElement.naturalHeight;
-    srcWidth = srcHeight * containerAspectRatio;
-    srcY = 0;
-    srcX = (baseImageElement.naturalWidth - srcWidth) / 2;
+      if (imageAspectRatio > containerAspectRatio) {
+          baseHeight = format.height;
+          baseWidth = format.height * imageAspectRatio;
+      } else {
+          baseWidth = format.width;
+          baseHeight = format.width / imageAspectRatio;
+      }
   }
-  
-  const invZoom = 1 / transform.zoom;
-  srcWidth *= invZoom;
-  srcHeight *= invZoom;
 
-  const maxSrcX = Math.max(0, baseImageElement.naturalWidth - srcWidth);
-  const maxSrcY = Math.max(0, baseImageElement.naturalHeight - srcHeight);
-  const clampedPanX = Math.min(1, Math.max(-1, transform.position.x || 0));
-  const clampedPanY = Math.min(1, Math.max(-1, transform.position.y || 0));
-  srcX = maxSrcX > 0 ? ((clampedPanX + 1) / 2) * maxSrcX : 0;
-  srcY = maxSrcY > 0 ? ((clampedPanY + 1) / 2) * maxSrcY : 0;
-  
+  const zoom = transform.zoom || 1;
+  const targetWidth = baseWidth * zoom;
+  const targetHeight = baseHeight * zoom;
+
+  const overflowX = Math.max(0, targetWidth - format.width);
+  const overflowY = Math.max(0, targetHeight - format.height);
+  const underflowX = Math.max(0, format.width - targetWidth);
+  const underflowY = Math.max(0, format.height - targetHeight);
+
+  const x = Math.min(1, Math.max(-1, transform.position.x || 0));
+  const y = Math.min(1, Math.max(-1, transform.position.y || 0));
+
+  let drawX, drawY;
+
+  if (targetWidth > format.width) {
+      drawX = -overflowX / 2 - (x * overflowX / 2);
+  } else {
+      drawX = underflowX / 2 + (x * underflowX / 2);
+  }
+
+  if (targetHeight > format.height) {
+      drawY = -overflowY / 2 - (y * overflowY / 2);
+  } else {
+      drawY = underflowY / 2 + (y * underflowY / 2);
+  }
+
+  // Draw background (black handles 'contain' underflow nicely, default behavior)
   ctx.clearRect(0, 0, format.width, format.height);
-  ctx.drawImage(
-    baseImageElement,
-    srcX, srcY,
-    srcWidth, srcHeight,
-    0, 0,
-    format.width, format.height
-  );
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, format.width, format.height);
+  
+  // Draw the image directly on the canvas with the calculated offsets and size
+  if (fitMode === 'contain') {
+      const radius = format.width * 0.03;
+      ctx.save();
+      drawRoundedRect(ctx, drawX, drawY, targetWidth, targetHeight, radius);
+      ctx.clip();
+      ctx.drawImage(baseImageElement, drawX, drawY, targetWidth, targetHeight);
+      ctx.restore();
+  } else {
+      ctx.drawImage(baseImageElement, drawX, drawY, targetWidth, targetHeight);
+  }
   
   ctx.restore();
 
