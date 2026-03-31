@@ -157,7 +157,7 @@ async function generateAndDownloadImage(
   
   ctx.restore();
 
-  if (format.hasText) {
+  if (format.hasText && textContent.hideText !== true) {
     const templateStyles = constants.TEMPLATES[textContent.templateId || constants.TEMPLATE_ID.NEWS];
     
     const textBoxWidth = format.width * 0.8759;
@@ -200,8 +200,12 @@ async function generateAndDownloadImage(
         ctx.save();
         drawRoundedRect(ctx, boxX, boxY, textBoxWidth, boxHeight, safeScale * 24);
         ctx.clip();
-        ctx.filter = textContent.contrastBoost ? 'blur(24px) brightness(0.6)' : 'blur(12px)';
-        ctx.drawImage(canvas, 0, 0);
+        try {
+            ctx.filter = textContent.contrastBoost ? 'blur(24px) brightness(0.6)' : 'blur(12px)';
+            ctx.drawImage(canvas, 0, 0);
+        } catch (e) {
+            console.warn("Filtro de canvas (blur) falhou. Pulando detalhe visual para evitar erro na exportação.", e);
+        }
         ctx.restore();
 
         ctx.fillStyle = templateStyles.backgroundColor;
@@ -221,9 +225,12 @@ async function generateAndDownloadImage(
 
         const textContainerWidth = boxX + textBoxWidth - padding - currentX;
         let currentY = boxY + padding;
+        
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'left';
 
         if (textContent.showEyebrowInput !== false && textContent.eyebrow) {
-            ctx.font = `${safeScale * 22}px Archivo`;
+            ctx.font = `${safeScale * 22}px 'Archivo', sans-serif`;
             ctx.fillStyle = templateStyles.eyebrowColor;
             
             // BUG-022: letterSpacing is experimental. Added defensive check.
@@ -242,16 +249,16 @@ async function generateAndDownloadImage(
         }
 
         if (textContent.headline) {
-            ctx.font = `${safeScale * 50}px Archivo`;
-            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `${safeScale * 50}px Archivo`, textContainerWidth);
+            ctx.font = `${safeScale * 50}px 'Archivo', sans-serif`;
+            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `${safeScale * 50}px 'Archivo', sans-serif`, textContainerWidth);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 60, textContainerWidth, templateStyles.textColor);
             currentY += lines.length * safeScale * 60;
         }
 
         if (textContent.showSubtitleInput !== false && textContent.subtitle) {
             currentY += safeScale * 12;
-            ctx.font = `${safeScale * 28}px Archivo`;
-            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 28}px Archivo`, textContainerWidth);
+            ctx.font = `${safeScale * 28}px 'Archivo', sans-serif`;
+            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 28}px 'Archivo', sans-serif`, textContainerWidth);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 36, textContainerWidth, templateStyles.subtitleColor);
         }
         
@@ -277,7 +284,7 @@ async function generateAndDownloadImage(
         const textW = textBoxWidth - padding;
 
         if (textContent.showEyebrowInput !== false && textContent.eyebrow) {
-            ctx.font = `bold ${safeScale * 24}px Archivo`;
+            ctx.font = `bold ${safeScale * 24}px 'Archivo', sans-serif`;
             ctx.fillStyle = templateStyles.eyebrowColor;
             
             const spacing = safeScale * 0.2 * 24;
@@ -299,8 +306,8 @@ async function generateAndDownloadImage(
             ctx.shadowBlur = safeScale * 12;
             ctx.shadowOffsetY = safeScale * 4;
             
-            ctx.font = `bold ${safeScale * 65}px Archivo`;
-            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `bold ${safeScale * 65}px Archivo`, textW);
+            ctx.font = `bold ${safeScale * 65}px 'Archivo', sans-serif`;
+            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `bold ${safeScale * 65}px 'Archivo', sans-serif`, textW);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 75, textW, templateStyles.textColor, true);
             
             ctx.shadowColor = "transparent";
@@ -315,8 +322,8 @@ async function generateAndDownloadImage(
             ctx.shadowBlur = safeScale * 8;
             ctx.shadowOffsetY = safeScale * 2;
             
-            ctx.font = `${safeScale * 32}px Archivo`;
-            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 32}px Archivo`, textW);
+            ctx.font = `${safeScale * 32}px 'Archivo', sans-serif`;
+            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 32}px 'Archivo', sans-serif`, textW);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 42, textW, templateStyles.subtitleColor);
             
             ctx.shadowColor = "transparent";
@@ -344,8 +351,8 @@ async function generateAndDownloadImage(
         
         if (textContent.headline) {
             const quoteText = textContent.headline;
-            ctx.font = `italic bold ${safeScale * 45}px Archivo`;
-            const lines = window.richTextService.parseRichTextToLines(ctx, quoteText, `italic bold ${safeScale * 45}px Archivo`, textW);
+            ctx.font = `italic bold ${safeScale * 45}px 'Archivo', sans-serif`;
+            const lines = window.richTextService.parseRichTextToLines(ctx, quoteText, `italic bold ${safeScale * 45}px 'Archivo', sans-serif`, textW);
             const lineHeight = safeScale * 55;
             
             for (const line of lines) {
@@ -362,7 +369,7 @@ async function generateAndDownloadImage(
         currentY += safeScale * 4 + safeScale * 16;
         
         if (textContent.showEyebrowInput !== false && textContent.eyebrow) {
-            ctx.font = `bold ${safeScale * 26}px Archivo`;
+            ctx.font = `bold ${safeScale * 26}px 'Archivo', sans-serif`;
             ctx.fillStyle = templateStyles.eyebrowColor;
             
             const spacing = safeScale * 0.1 * 26;
@@ -382,8 +389,8 @@ async function generateAndDownloadImage(
         }
         
         if (textContent.showSubtitleInput !== false && textContent.subtitle) {
-            ctx.font = `${safeScale * 24}px Archivo`;
-            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 24}px Archivo`, textW);
+            ctx.font = `${safeScale * 24}px 'Archivo', sans-serif`;
+            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 24}px 'Archivo', sans-serif`, textW);
             const subLineHeight = safeScale * 32;
             for (const line of lines) {
                 const lineWidth = measureLineWidth(ctx, line);
@@ -413,7 +420,7 @@ async function generateAndDownloadImage(
             ctx.shadowBlur = safeScale * 12;
             ctx.shadowOffsetY = safeScale * 4;
             
-            ctx.font = `bold ${safeScale * 140}px Archivo`;
+            ctx.font = `bold ${safeScale * 140}px 'Archivo', sans-serif`;
             ctx.fillStyle = templateStyles.eyebrowColor;
             ctx.textBaseline = 'top';
             ctx.textAlign = 'center';
@@ -428,8 +435,8 @@ async function generateAndDownloadImage(
         }
 
         if (textContent.headline) {
-            ctx.font = `bold ${safeScale * 35}px Archivo`;
-            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `bold ${safeScale * 35}px Archivo`, textW);
+            ctx.font = `bold ${safeScale * 35}px 'Archivo', sans-serif`;
+            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `bold ${safeScale * 35}px 'Archivo', sans-serif`, textW);
             const lineHeight = safeScale * 42;
             
             for (const line of lines) {
@@ -443,8 +450,8 @@ async function generateAndDownloadImage(
 
         if (textContent.showSubtitleInput !== false && textContent.subtitle) {
             currentY += safeScale * 16;
-            ctx.font = `${safeScale * 26}px Archivo`;
-            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 26}px Archivo`, textW);
+            ctx.font = `${safeScale * 26}px 'Archivo', sans-serif`;
+            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 26}px 'Archivo', sans-serif`, textW);
             const subLineHeight = safeScale * 34;
             const paddingX = safeScale * 16;
             const paddingY = safeScale * 8;

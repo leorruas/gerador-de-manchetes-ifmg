@@ -197,10 +197,10 @@
         return { artsGenerated: 0, timeSavedMinutes: 0 };
     }
 
-    function incrementStats() {
+    function incrementStats(amount = 1) {
         const stats = getStats();
-        stats.artsGenerated += 1;
-        stats.timeSavedMinutes += 10; // Assume 10 mins saved per art
+        stats.artsGenerated += amount;
+        stats.timeSavedMinutes += (amount * 10); // Assume 10 mins saved per art
         localStorage.setItem('mancheteExpress_stats', JSON.stringify(stats));
         return stats;
     }

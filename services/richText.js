@@ -1,5 +1,5 @@
 (() => {
-const FONT_FAMILY = 'Archivo';
+const FONT_FAMILY = "'Archivo', sans-serif";
 
 function escapeHtml(text) {
   return text
@@ -92,8 +92,8 @@ function measureToken(context, token, baseFont) {
 }
 
 function parseRichTextToLines(context, text, baseFont, maxWidth) {
-  if (!text) return [];
-  const paragraphs = parseRichText(text);
+  if (!text || String(text).trim() === '') return [];
+  const paragraphs = parseRichText(String(text));
   const lines = [];
 
   const oldFont = context.font;
@@ -147,6 +147,7 @@ function drawRichTextLines(context, lines, startX, startY, lineHeight, maxWidth,
   
   // Always use 'top' baseline so coordinates are predictable (top of the em box)
   context.textBaseline = 'top';
+  context.textAlign = 'left';
   
   lines.forEach((line) => {
     let currentX = startX;

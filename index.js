@@ -15,6 +15,7 @@ const createDefaultTransforms = () =>
     }), {});
 
 let state = {
+    // === Dados do Slide Ativo ===
     baseImage: null,
     baseImageElement: new Image(),
     templateId: DEFAULT_TEMPLATE_ID,
@@ -24,13 +25,20 @@ let state = {
     slug: 'noticia-exemplo',
     textVerticalPositions: createDefaultPositions(),
     transforms: createDefaultTransforms(),
-    originalTransforms: {}, // To store state before cropping for cancellation
-    croppingFormatId: null,
-    showExportModal: false,
-    showHistoryModal: false,
     showEyebrowInput: true,
     showSubtitleInput: false,
     contrastBoost: {},
+    hideText: {}, // { 'instagram-post': true/false }
+
+    // === Metadados do App Global (Array) ===
+    slides: [], 
+    activeSlideId: null,
+
+    // === Estado Temporário / UI ===
+    originalTransforms: {},
+    croppingFormatId: null,
+    showExportModal: false,
+    showHistoryModal: false,
     historyItems: [],
     exportFormatIds: Object.values(constants.FORMATS).map((format) => format.id),
     feedback: null,
@@ -51,10 +59,74 @@ function showFeedback(message, tone = 'info') {
     }, 4000);
 }
 
+function loadSlideToState(slideId) {
+    if(state.activeSlideId) {
+        saveStateToSlides(); // Salva correções da aba atual antes de pular para próxima
+    }
+    const target = state.slides.find(s => s.id === slideId);
+    if(target) {
+        state.activeSlideId = target.id;
+        state.baseImage = target.baseImage;
+        state.templateId = target.templateId;
+        state.eyebrow = target.eyebrow;
+        state.headlines = { ...target.headlines };
+        state.subtitle = target.subtitle;
+        state.slug = target.slug;
+        state.textVerticalPositions = { ...target.textVerticalPositions };
+        state.transforms = { ...target.transforms };
+        state.showEyebrowInput = target.showEyebrowInput;
+        state.showSubtitleInput = target.showSubtitleInput;
+        state.contrastBoost = { ...target.contrastBoost };
+        state.hideText = typeof target.hideText === 'boolean' ? {} : { ...target.hideText };
+        
+        state.baseImageElement.src = target.baseImage;
+    }
+}
+
+function saveStateToSlides() {
+    if(!state.activeSlideId) return;
+    const target = state.slides.find(s => s.id === state.activeSlideId);
+    if(target) {
+        target.baseImage = state.baseImage;
+        target.templateId = state.templateId;
+        target.eyebrow = state.eyebrow;
+        target.headlines = { ...state.headlines };
+        target.subtitle = state.subtitle;
+        target.slug = state.slug;
+        target.textVerticalPositions = { ...state.textVerticalPositions };
+        target.transforms = { ...state.transforms };
+        target.showEyebrowInput = state.showEyebrowInput;
+        target.showSubtitleInput = state.showSubtitleInput;
+        target.contrastBoost = { ...state.contrastBoost };
+        target.hideText = { ...state.hideText };
+    }
+}
+
 function getPersistedState() {
     try {
         const saved = window.localStorage.getItem(STORAGE_KEY);
-        return saved ? JSON.parse(saved) : null;
+        const parsed = saved ? JSON.parse(saved) : null;
+        if(parsed && !parsed.slides && parsed.baseImage) {
+            // Compatibilidade Reversa (Migração State V1 para V2)
+            parsed.id = Date.now().toString();
+            parsed.slides = [ {
+                 id: parsed.id,
+                 baseImage: parsed.baseImage,
+                 templateId: parsed.templateId,
+                 eyebrow: parsed.eyebrow,
+                 headlines: parsed.headlines,
+                 subtitle: parsed.subtitle,
+                 slug: parsed.slug,
+                 textVerticalPositions: parsed.textVerticalPositions,
+                 transforms: parsed.transforms,
+                 showEyebrowInput: parsed.showEyebrowInput,
+                 showSubtitleInput: parsed.showSubtitleInput,
+                 contrastBoost: parsed.contrastBoost || {},
+                 hideText: typeof parsed.hideText === 'boolean' ? {} : (parsed.hideText || {})
+            } ];
+            parsed.activeSlideId = parsed.id;
+        }
+        return parsed;
     } catch (error) {
         console.error('Persisted state could not be read:', error);
         return null;
@@ -63,18 +135,11 @@ function getPersistedState() {
 
 function persistState() {
     try {
+        saveStateToSlides(); // Garante o array cacheado sincrono ao atual
         const stateToPersist = {
-            baseImage: state.baseImage,
-            templateId: state.templateId,
-            eyebrow: state.eyebrow,
-            headlines: state.headlines,
-            subtitle: state.subtitle,
-            slug: state.slug,
-            textVerticalPositions: state.textVerticalPositions,
-            transforms: state.transforms,
-            showEyebrowInput: state.showEyebrowInput,
-            showSubtitleInput: state.showSubtitleInput,
-            contrastBoost: state.contrastBoost
+            baseImage: state.baseImage, // keeps active slide for legacy history compat partially
+            slides: state.slides,
+            activeSlideId: state.activeSlideId,
         };
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToPersist));
     } catch (error) {
@@ -197,31 +262,80 @@ function updateCropPreview(formatId) {
 
 // --- EVENT HANDLERS (attached to window for inline HTML access) ---
 
-window.handleImageFile = (file) => {
-    if (file && file.type.startsWith('image/')) {
+function readAsDataURLAsync(file) {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (event) => {
-            state.baseImage = event.target.result;
-            state.baseImageElement.onload = () => {
-                schedulePersist();
-                showFeedback('Imagem carregada com sucesso.', 'success');
-            };
-            state.baseImageElement.src = state.baseImage;
-        };
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
         reader.readAsDataURL(file);
-    } else if (file) {
-        showFeedback('Envie um arquivo de imagem válido (JPG, PNG ou WebP).', 'error');
+    });
+}
+
+function createSlideData(dataUrl) {
+    return {
+         id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+         baseImage: dataUrl,
+         templateId: state.templateId || DEFAULT_TEMPLATE_ID,
+         eyebrow: state.eyebrow || constants.TEMPLATES[DEFAULT_TEMPLATE_ID].eyebrow,
+         headlines: Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: state.headlines?.[curr.id] || 'Título da notícia ou chamada para a arte' }), {}),
+         subtitle: state.subtitle || '',
+         slug: state.slug || 'noticia-exemplo',
+         textVerticalPositions: createDefaultPositions(),
+         transforms: createDefaultTransforms(),
+         showEyebrowInput: state.showEyebrowInput ?? true,
+         showSubtitleInput: state.showSubtitleInput ?? false,
+         contrastBoost: {},
+         hideText: typeof state.hideText === 'boolean' ? {} : { ...state.hideText }
+    };
+}
+
+window.handleImageFiles = async (filesArray) => {
+    if (!filesArray || filesArray.length === 0) return;
+    
+    const files = Array.from(filesArray).filter(f => f.type.startsWith('image/'));
+    if(files.length === 0) {
+        showFeedback('Envie arquivos de imagem válidos (JPG, PNG ou WebP).', 'error');
+        return;
+    }
+
+    let firstLoadSlideId = null;
+
+    for (let file of files) {
+        try {
+            const dataUrl = await readAsDataURLAsync(file);
+            const slide = createSlideData(dataUrl);
+            state.slides.push(slide);
+            if(!firstLoadSlideId && !state.activeSlideId) {
+                firstLoadSlideId = slide.id;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    
+    if (firstLoadSlideId) {
+        loadSlideToState(firstLoadSlideId);
+        state.baseImageElement.onload = () => {
+             schedulePersist();
+             showFeedback(`${files.length} imagem(ns) carregada(s).`, 'success');
+             renderApp();
+        };
+        // The src assignment triggers the onload
+    } else {
+        schedulePersist();
+        showFeedback(`${files.length} imagem(ns) adicionada(s) ao Carrossel.`, 'success');
+        renderApp();
     }
 };
 
 window.handleImageSelect = (event) => {
-    window.handleImageFile(event.target.files?.[0]);
+    window.handleImageFiles(event.target.files);
 };
 
 window.handleFileDrop = (event) => {
     event.preventDefault();
     document.getElementById('dropzone')?.classList.remove('border-solid', 'border-amber-400', 'bg-zinc-900', 'scale-105');
-    window.handleImageFile(event.dataTransfer.files?.[0]);
+    window.handleImageFiles(event.dataTransfer.files);
 };
 
 window.handleDragOver = (event) => {
@@ -235,7 +349,10 @@ window.handleDragLeave = (event) => {
 };
 
 window.handleNewImage = () => {
+    state.activeSlideId = null;
     state.baseImage = null;
+    state.slides = []; // Limpa o array
+    
     // Reset state to defaults
     state.templateId = DEFAULT_TEMPLATE_ID;
     state.eyebrow = constants.TEMPLATES[DEFAULT_TEMPLATE_ID].eyebrow;
@@ -246,6 +363,7 @@ window.handleNewImage = () => {
     state.transforms = createDefaultTransforms();
     state.originalTransforms = {};
     state.croppingFormatId = null;
+    state.hideText = false;
     state.exportFormatIds = Object.values(constants.FORMATS).map((format) => format.id);
     schedulePersist();
     renderApp();
@@ -253,12 +371,34 @@ window.handleNewImage = () => {
 
 window.openExportModal = (formatId = null) => {
     state.showExportModal = true;
-    state.exportFormatIds = formatId ? [formatId] : Object.values(constants.FORMATS).map((format) => format.id);
+    if (formatId) {
+        state.exportFormatIds = [formatId];
+    } else {
+        const activeFormats = state.slides && state.slides.length > 1 
+            ? [constants.FORMATS[constants.FormatId.INSTA_POST], constants.FORMATS[constants.FormatId.INSTA_STORY]]
+            : Object.values(constants.FORMATS);
+        state.exportFormatIds = activeFormats.map((format) => format.id);
+    }
     renderModals();
 };
 
 window.closeExportModal = () => {
     state.showExportModal = false;
+    renderModals();
+};
+
+window.openBatchExportModal = (formatId = null) => {
+    state.showBatchExportModal = true;
+    if (formatId) {
+        state.batchExportFormatIds = [formatId];
+    } else {
+        state.batchExportFormatIds = [constants.FormatId.INSTA_POST, constants.FormatId.INSTA_STORY];
+    }
+    renderModals();
+};
+
+window.closeBatchExportModal = () => {
+    state.showBatchExportModal = false;
     renderModals();
 };
 
@@ -323,18 +463,21 @@ window.handleExport = async (type, event) => {
                 state.baseImageElement,
                 state.transforms[format.id],
                 {
-                    headline: state.headlines[formatId],
-                    eyebrow: state.eyebrow,
-                    subtitle: state.subtitle,
+                    headline: state.headlines[formatId] || '',
+                    eyebrow: state.eyebrow || '',
+                    subtitle: state.subtitle || '',
                     templateId: state.templateId,
                     showEyebrowInput: state.showEyebrowInput,
                     showSubtitleInput: state.showSubtitleInput,
-                    contrastBoost: state.contrastBoost[formatId] || false
+                    contrastBoost: !!(state.contrastBoost && state.contrastBoost[formatId]),
+                    hideText: !!(state.hideText && state.hideText[formatId])
                 },
                 state.textVerticalPositions[format.id],
                 state.slug,
                 type
             );
+            // Delay para evitar bloqueio de downloads em massa no navegador
+            await new Promise(res => setTimeout(res, 600));
         }
         showFeedback('Exportação concluída.', 'success');
         
@@ -350,6 +493,70 @@ window.handleExport = async (type, event) => {
         exportButton.disabled = false;
         exportButton.innerHTML = originalText;
         window.closeExportModal();
+    }
+};
+
+window.handleBatchExport = async (type, event) => {
+    const exportButton = event.target;
+    const originalText = exportButton.innerHTML;
+    exportButton.disabled = true;
+    exportButton.innerHTML = 'Processando carrossel...';
+
+    saveStateToSlides();  
+    
+    try {
+        let i = 1;
+        for (const slide of state.slides) {
+            const slideImg = new Image();
+            await new Promise((res, rej) => {
+                slideImg.onload = res;
+                slideImg.onerror = rej;
+                slideImg.src = slide.baseImage;
+            });
+
+            // Usa os formatos selecionados para o lote (específico ou todos)
+            const batchFormats = state.batchExportFormatIds || [constants.FormatId.INSTA_POST, constants.FormatId.INSTA_STORY];
+            
+            for (const formatId of batchFormats) {
+                const format = constants.FORMATS[formatId];
+                const ts = slide.transforms[formatId] || createDefaultTransforms()[formatId];
+                
+                await canvasExport.generateAndDownloadImage(
+                    format,
+                    slideImg,
+                    ts,
+                    {
+                        headline: slide.headlines[formatId] || '',
+                        eyebrow: slide.eyebrow || '',
+                        subtitle: slide.subtitle || '',
+                        templateId: slide.templateId,
+                        showEyebrowInput: slide.showEyebrowInput,
+                        showSubtitleInput: slide.showSubtitleInput,
+                        contrastBoost: !!(slide.contrastBoost && slide.contrastBoost[formatId]),
+                        hideText: !!(slide.hideText && slide.hideText[formatId])
+                    },
+                    slide.textVerticalPositions && slide.textVerticalPositions[formatId] != null ? slide.textVerticalPositions[formatId] : 0.5,
+                    `${slide.slug || 'carrossel'}-slide${i}`,
+                    type
+                );
+            }
+            
+            i++;
+            await new Promise(res => setTimeout(res, 500)); 
+        }
+        showFeedback('Carrossel exportado com sucesso.', 'success');
+        
+        if (window.historyService) {
+            window.historyService.incrementStats(state.slides.length);
+            await window.historyService.saveStateToHistory(state);
+        }
+    } catch (e) {
+        console.error("Batch Export failed:", e);
+        showFeedback('Ocorreu um erro durante a exportação do carrossel.', 'error');
+    } finally {
+        exportButton.disabled = false;
+        exportButton.innerHTML = originalText;
+        window.closeBatchExportModal();
     }
 };
 
@@ -373,21 +580,53 @@ window.restoreHistoryItem = async (id) => {
         const item = await window.historyService.getHistoryItem(id);
         if (item) {
             // Restore state logic
-            state.baseImage = item.baseImage;
-            state.templateId = item.templateId;
-            state.eyebrow = item.eyebrow;
-            state.headlines = item.headlines;
-            state.subtitle = item.subtitle;
-            state.slug = item.slug;
-            state.textVerticalPositions = item.textVerticalPositions;
-            state.transforms = item.transforms;
+            state.slides = item.slides || [];
+            
+            if (state.slides.length > 0) {
+                // Version 2 structure
+                state.activeSlideId = item.activeSlideId;
+                loadSlideToState(state.activeSlideId);
+            } else {
+                // Legacy Version 1 restore mapped to new structure
+                state.baseImage = item.baseImage;
+                state.templateId = item.templateId;
+                state.eyebrow = item.eyebrow;
+                state.headlines = item.headlines;
+                state.subtitle = item.subtitle;
+                state.slug = item.slug;
+                state.textVerticalPositions = item.textVerticalPositions;
+                state.transforms = item.transforms;
+                state.hideText = false;
+                
+                // create single internal slide
+                const slideId = Date.now().toString();
+                state.activeSlideId = slideId;
+                state.slides = [{
+                    id: slideId,
+                    baseImage: state.baseImage,
+                    templateId: state.templateId,
+                    eyebrow: state.eyebrow,
+                    headlines: state.headlines,
+                    subtitle: state.subtitle,
+                    slug: state.slug,
+                    textVerticalPositions: state.textVerticalPositions,
+                    transforms: state.transforms,
+                    showEyebrowInput: item.showEyebrowInput ?? true,
+                    showSubtitleInput: item.showSubtitleInput ?? false,
+                    contrastBoost: item.contrastBoost || {},
+                    hideText: false
+                }];
+                state.baseImageElement.src = state.baseImage;
+            }
             
             // Wait for image reload to trigger render
             state.baseImageElement.onload = () => {
                 showFeedback('Arte restaurada com sucesso!', 'success');
                 renderApp();
             };
-            state.baseImageElement.src = state.baseImage;
+            if(!state.baseImageElement.src) {
+                state.baseImageElement.src = state.baseImage;
+            }
             
             schedulePersist();
             window.closeHistoryModal();
@@ -445,6 +684,18 @@ window.toggleFitMode = (formatId) => {
     renderApp();
 };
 
+window.handleSlideSwitch = (id) => {
+    if(state.activeSlideId === id) return;
+    loadSlideToState(id);
+    schedulePersist();
+    renderApp();
+};
+
+window.toggleHideText = (formatId) => {
+    state.hideText[formatId] = !state.hideText[formatId];
+    schedulePersist();
+    renderApp();
+};
 
 window.handleZoomChange = (event) => {
     const zoom = parseFloat(event.target.value);
@@ -653,7 +904,7 @@ const WelcomeScreen = () => {
                     ${constants.UploadIcon}
                     <p class="mt-4 font-semibold text-white">Arraste e solte uma imagem aqui</p>
                     <p class="text-sm text-zinc-400">ou clique para selecionar</p>
-                    <input id="image-upload" type="file" accept="image/jpeg, image/png, image/webp" class="hidden" onchange="handleImageSelect(event)" />
+                    <input id="image-upload" type="file" multiple accept="image/jpeg, image/png, image/webp" class="hidden" onchange="handleImageSelect(event)" />
                 </label>
                 <div class="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-sm">
                     <button onclick="openHistoryModal()" class="flex-1 bg-zinc-800 text-white font-semibold py-3 px-6 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 border border-zinc-700 flex items-center justify-center gap-2 shadow-lg">
@@ -670,23 +921,23 @@ const WelcomeScreen = () => {
                 <ol class="space-y-4">
                     <li class="flex items-start gap-4">
                         <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Upload}</div>
-                        <div><p class="font-bold text-white">1. Envie uma imagem</p><p class="text-zinc-400">Arraste um arquivo para a área indicada ou clique para escolher (JPG, PNG, WebP).</p></div>
+                        <div><p class="font-bold text-white">1. Envie uma ou várias imagens</p><p class="text-zinc-400">Arraste os arquivos para a área indicada ou clique para escolher (JPG, PNG, WebP).</p></div>
                     </li>
                     <li class="flex items-start gap-4">
                         <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Crop}</div>
-                        <div><p class="font-bold text-white">2. Reenquadre a imagem</p><p class="text-zinc-400">Use o ícone de crop em cada preview para abrir o editor, onde você pode ajustar o zoom e a posição da imagem.</p></div>
+                        <div><p class="font-bold text-white">2. Preencha ou Ajuste</p><p class="text-zinc-400">Navegue pelas miniaturas e clique em "Ajustar à tela" ou "Preencher a tela" para moldar a imagem perfeitamente ao formato. Use o ícone de crop para pan e zoom.</p></div>
                     </li>
                     <li class="flex items-start gap-4">
                         <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Edit}</div>
-                        <div><p class="font-bold text-white">3. Edite a manchete</p><p class="text-zinc-400">Clique no texto sobre a imagem para editar a manchete. Use <code>**negrito**</code>, <code>*itálico*</code> ou <code>$$verde$$</code> para destacar partes específicas.</p></div>
+                        <div><p class="font-bold text-white">3. Edite ou Oculte a manchete</p><p class="text-zinc-400">Clique na manchete para escrever ou decida exportar uma arte "limpa" (Apenas Imagem, sem textos soltos).</p></div>
                     </li>
                     <li class="flex items-start gap-4">
                         <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Drag}</div>
-                        <div><p class="font-bold text-white">4. Ajuste a posição do texto</p><p class="text-zinc-400">Clique e arraste a caixa de texto verticalmente para encontrar a melhor posição em cada formato.</p></div>
+                        <div><p class="font-bold text-white">4. Ajuste espacial livre</p><p class="text-zinc-400">Se for postar manchete, arraste o bloco de texto inteiro verticalmente para não tampar rostos na arte.</p></div>
                     </li>
                      <li class="flex items-start gap-4">
                         <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Export}</div>
-                        <div><p class="font-bold text-white">5. Exporte tudo</p><p class="text-zinc-400">Clique em "Exportar Todos", defina um nome de arquivo (slug) e escolha o formato para baixar todas as artes.</p></div>
+                        <div><p class="font-bold text-white">5. Exporte em Carrossel/Lote</p><p class="text-zinc-400">Clique no botão Exportar para gerar o seu post ou baixar individualmente como um único pacote de imagens otimizado!</p></div>
                     </li>
                 </ol>
             </div>
@@ -706,10 +957,38 @@ const ImagePreview = (format) => {
     const templateStyles = constants.TEMPLATES[state.templateId];
 
     return `
-        <div class="mb-8 last:mb-0">
-            <h3 class="text-lg font-bold text-zinc-400 mb-2">${format.name} (${format.width}x${format.height})</h3>
+        <div class="mb-10 last:mb-0">
+            <h3 class="text-lg font-bold text-zinc-400 mb-3">${format.name} (${format.width}x${format.height})</h3>
+            
+            <div class="flex gap-2 mb-3 overflow-x-auto hide-scrollbar scroll-smooth">
+               ${state.slides && state.slides.length > 1 ? `
+               <div class="flex items-center gap-1 bg-zinc-800 p-1 rounded-full border border-zinc-700">
+                   ${state.slides.map((s, idx) => `
+                       <button onclick="handleSlideSwitch('${s.id}')" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 ${state.activeSlideId === s.id ? 'bg-amber-400 text-black shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}">
+                           ${idx + 1}
+                       </button>
+                   `).join('')}
+                   <button onclick="document.getElementById('add-slide-upload').click()" class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-amber-400 hover:bg-zinc-700 transition-colors focus:outline-none" title="Adicionar Foto">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                   </button>
+               </div>
+               ` : ''}
+               
+               ${format.hasText ? `
+               <button aria-label="Ocultar Textos" onclick="toggleHideText('${format.id}')" class="bg-zinc-800 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400 whitespace-nowrap ${state.hideText[format.id] ? 'text-amber-400 border-amber-400/50' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}">
+                   ${state.hideText[format.id] ? `
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                       Exibir Textos
+                   ` : `
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" /><path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" /></svg>
+                       Imagem Pura
+                   `}
+               </button>
+               ` : ''}
+            </div>
+
             <div id="preview-${format.id}" 
-                 class="relative bg-black rounded-lg overflow-hidden shadow-lg w-full ${isCropping ? 'cursor-grab' : ''}" 
+                 class="relative bg-black rounded-[0.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.8)] w-full border border-zinc-800 ${isCropping ? 'cursor-grab' : ''}" 
                  style="aspect-ratio: ${format.width} / ${format.height}"
                  onmousedown="${isCropping ? `startDrag(event, 'crop', '${format.id}')` : ''}"
                  ontouchstart="${isCropping ? `startDrag(event, 'crop', '${format.id}')` : ''}">
@@ -717,7 +996,7 @@ const ImagePreview = (format) => {
                 <img id="preview-image-${format.id}" src="${state.baseImage}" alt="Preview ${format.name}" class="absolute pointer-events-none max-w-none shadow-xl" 
                      style="width:${imageMetrics ? imageMetrics.widthPercent : 100}%; height:${imageMetrics ? imageMetrics.heightPercent : 100}%; left:${imageMetrics ? imageMetrics.leftPercent : 0}%; top:${imageMetrics ? imageMetrics.topPercent : 0}%; border-radius: ${transform.fitMode === 'contain' ? (previewWidth * 0.03) + 'px' : '0'}; object-fit: cover;">
 
-                ${format.hasText ? `
+                ${(format.hasText && !state.hideText[format.id]) ? `
                     ${format.id === 'instagram-story' ? `
                     <!-- Instagram Story Safe Zones -->
                     <div class="absolute inset-x-0 top-0 h-[10%] border-b border-dashed border-white/20 bg-black/20 pointer-events-none z-30 flex items-start justify-center pt-4">
@@ -812,10 +1091,10 @@ const ImagePreview = (format) => {
                 ${!isCropping ? `
                  <div class="absolute top-2 right-2 flex gap-2 z-20">
                      <button aria-label="Alterar Preenchimento" onclick="toggleFitMode('${format.id}')" class="px-4 py-2 text-xs font-semibold bg-black/60 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
-                         ${transform.fitMode === 'contain' ? 'Fundo Preto' : 'Ajustar à tela'}
+                         ${transform.fitMode === 'contain' ? 'Preencher a tela' : 'Ajustar à tela'}
                      </button>
-                     <button aria-label="Exportar ${format.name}" onclick="openExportModal('${format.id}')" class="px-4 py-2 text-xs font-semibold bg-black/60 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
-                         Exportar
+                     <button aria-label="Exportar ${format.name}" onclick="${state.slides && state.slides.length > 1 ? `openBatchExportModal('${format.id}')` : `openExportModal('${format.id}')`}" class="px-4 py-2 text-xs font-semibold bg-black/60 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
+                          ${state.slides && state.slides.length > 1 ? 'Exportar Tudo' : 'Exportar'}
                      </button>
                      <button aria-label="Reenquadrar ${format.name}" onclick="toggleCropMode('${format.id}')" class="p-2 bg-black/60 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
                          ${constants.CropIcon}
@@ -844,10 +1123,14 @@ const ImagePreview = (format) => {
 };
 
 const ControlsBar = () => `
-    <footer class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-zinc-800 p-4 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 sm:gap-4 z-10">
+    <footer class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-zinc-800 p-4 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 sm:gap-4 z-40">
         <button aria-label="Histórico de Artes" onclick="openHistoryModal()" class="bg-zinc-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 border border-zinc-700">Histórico</button>
-        <button aria-label="Escolher nova imagem" onclick="handleNewImage()" class="flex-1 sm:flex-none bg-zinc-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400">Nova Imagem</button>
-        <button aria-label="Exportar todos os formatos" onclick="openExportModal()" class="flex-1 sm:flex-none bg-amber-400 text-black font-bold py-3 px-6 rounded-lg hover:bg-amber-500 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-200">Exportar Todos</button>
+        <button aria-label="Escolher nova imagem" onclick="handleNewImage()" class="flex-1 sm:flex-none bg-zinc-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400">Novo Post</button>
+        <button aria-label="Exportar" 
+            onclick="${state.slides && state.slides.length > 1 ? 'openBatchExportModal()' : 'openExportModal()'}" 
+            class="flex-1 sm:flex-none bg-amber-400 text-black font-bold py-3 px-6 rounded-lg hover:bg-amber-500 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-200">
+            ${state.slides && state.slides.length > 1 ? 'Exportar Todas as Imagens' : 'Exportar Atual'}
+        </button>
     </footer>
 `;
 
@@ -950,6 +1233,27 @@ const ExportModal = () => `
     </div>
 `;
 
+const BatchExportModal = () => `
+    <div class="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fade-in px-4">
+        <div class="bg-black border border-zinc-800 rounded-xl p-6 sm:p-8 shadow-lg w-full max-w-sm text-center">
+            <h2 class="text-2xl font-bold mb-3">Exportar Todas as Imagens</h2>
+            <p class="text-amber-400 font-semibold mb-4 text-sm">${state.slides.length} slides detectados.</p>
+            <p class="text-zinc-400 mb-6 text-sm">Download automático de todos os slides no${state.batchExportFormatIds.length === 1 ? ` formato <b>${constants.FORMATS[state.batchExportFormatIds[0]].name}</b>.` : 's formatos <b>Instagram Post</b> e <b>Stories</b>.'}</p>
+            <div class="flex flex-col gap-3">
+                <button aria-label="Exportar Lote em PNG" onclick="handleBatchExport('png', event)" class="w-full bg-amber-400 text-black font-bold py-3 rounded-lg hover:bg-amber-500 transition-colors disabled:opacity-50 focus:outline-none flex justify-center items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Baixar PNGs
+                </button>
+                <button aria-label="Exportar Lote em JPG" onclick="handleBatchExport('jpeg', event)" class="w-full bg-amber-400 text-black font-bold py-3 rounded-lg hover:bg-amber-500 transition-colors disabled:opacity-50 focus:outline-none flex justify-center items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Baixar JPGs
+                </button>
+            </div>
+            <button aria-label="Cancelar exportação de Lote" onclick="closeBatchExportModal()" class="mt-6 text-zinc-500 hover:text-red-400 transition-colors focus:outline-none rounded text-sm">Cancelar</button>
+        </div>
+    </div>
+`;
+
 const HistoryModal = () => `
     <div class="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fade-in p-4">
         <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
@@ -1012,6 +1316,8 @@ const FeedbackBanner = () => {
     `;
 };
 
+const SlideToolbar = () => { return ''; };
+
 // --- RENDER FUNCTIONS ---
 
 function renderApp() {
@@ -1023,22 +1329,28 @@ function renderApp() {
             ${WelcomeScreen()}
         `;
     } else {
-        const previewsHTML = Object.values(constants.FORMATS).map(ImagePreview).join('');
+        const activeFormats = state.slides && state.slides.length > 1 
+            ? [constants.FORMATS[constants.FormatId.INSTA_POST], constants.FORMATS[constants.FormatId.INSTA_STORY]]
+            : Object.values(constants.FORMATS);
+
+        const previewsHTML = activeFormats.map(ImagePreview).join('');
+        
         appElement.innerHTML = `
             ${FeedbackBanner()}
             <div class="min-h-screen bg-black text-white pb-28 sm:pb-24">
                 <div class="max-w-2xl mx-auto py-6 sm:py-8 px-4">
                     ${EditorPanel()}
-                    ${previewsHTML}
+                    <div class="mt-8 pt-8">
+                        ${previewsHTML}
+                    </div>
                 </div>
                 ${ControlsBar()}
             </div>
         `;
-        // After rendering, we need to correctly position the text boxes
-        // because their height is now known. This needs to be in the next
-        // frame to ensure the DOM is painted and dimensions are available.
+        // Because height is now known, we position text box overlays dynamically.
         requestAnimationFrame(() => {
-            Object.values(constants.FORMATS).forEach(format => {
+
+            activeFormats.forEach(format => {
                 if (format.hasText) {
                     const preview = document.getElementById(`preview-${format.id}`);
                     const box = document.getElementById(`headline-box-${format.id}`);
@@ -1066,6 +1378,8 @@ function renderModals() {
 
     if (state.showExportModal) {
         modalContainerElement.innerHTML = ExportModal();
+    } else if (state.showBatchExportModal) {
+        modalContainerElement.innerHTML = BatchExportModal();
     } else if (state.showHistoryModal) {
         modalContainerElement.innerHTML = HistoryModal();
     } else {

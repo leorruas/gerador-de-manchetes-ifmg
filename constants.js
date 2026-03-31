@@ -5,7 +5,6 @@ const FormatId = {
   PORTAL_CAMPI: 'PORTAL_CAMPI',
   PORTAL_PRINCIPAL: 'PORTAL_PRINCIPAL',
   LINKEDIN_POST: 'LINKEDIN_POST',
-  LINKEDIN_IMAGE: 'LINKEDIN_IMAGE',
 };
 
 const FORMATS = {
@@ -49,14 +48,6 @@ const FORMATS = {
     hasText: true,
     hasLogo: true,
     textScale: 0.8,
-  },
-  [FormatId.LINKEDIN_IMAGE]: {
-    id: FormatId.LINKEDIN_IMAGE,
-    name: 'LinkedIn Imagem',
-    width: 1200,
-    height: 627,
-    hasText: false,
-    hasLogo: false,
   },
 };
 
