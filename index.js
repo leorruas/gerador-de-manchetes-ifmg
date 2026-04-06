@@ -1038,13 +1038,13 @@ const ImagePreview = (format) => {
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                             </button>
                             ${state.showEyebrowInput && state.eyebrow ? `<div class="block w-full text-left uppercase tracking-[0.2em] mb-3 font-bold" style="color: ${templateStyles.eyebrowColor}; font-size:${scaleFactor * 24}px; line-height:${scaleFactor * 30}px;">${state.eyebrow}</div>` : ''}
-                            <div id="headline-text-${format.id}" class="block w-full text-left" onclick="startHeadlineEdit('${format.id}')" style="color: ${templateStyles.textColor}; font-size:${scaleFactor * 65}px; line-height:${scaleFactor * 75}px; text-align: left; font-weight: 700; text-shadow: 0px 4px 12px rgba(0,0,0,0.5);">
+                            <div id="headline-text-${format.id}" class="block w-full text-left" onclick="startHeadlineEdit('${format.id}')" style="color: ${templateStyles.textColor}; font-size:${scaleFactor * 65}px; line-height:${scaleFactor * 75}px; text-align: left; font-weight: 700;">
                                 ${renderRichTextHtml(state.headlines[format.id])}
                             </div>
                             <textarea id="headline-textarea-${format.id}" oninput="updateHeadline(event, '${format.id}')" onblur="finishHeadlineEdit(event, '${format.id}')" 
                                 class="block w-full bg-transparent text-left resize-none border-none outline-none focus:ring-0 p-0 font-bold" 
-                                style="color: ${templateStyles.textColor}; display: none; font-size:${scaleFactor * 65}px; line-height:${scaleFactor * 75}px; text-align: left; text-shadow: 0px 4px 12px rgba(0,0,0,0.5);"></textarea>
-                            ${state.showSubtitleInput && state.subtitle ? `<div class="block w-full text-left mt-4" style="color: ${templateStyles.subtitleColor}; font-size:${scaleFactor * 32}px; line-height:${scaleFactor * 42}px; text-shadow: 0px 2px 8px rgba(0,0,0,0.8);">${renderRichTextHtml(state.subtitle)}</div>` : ''}
+                                style="color: ${templateStyles.textColor}; display: none; font-size:${scaleFactor * 65}px; line-height:${scaleFactor * 75}px; text-align: left;"></textarea>
+                            ${state.showSubtitleInput && state.subtitle ? `<div class="block w-full text-left mt-4" style="color: ${templateStyles.subtitleColor}; font-size:${scaleFactor * 32}px; line-height:${scaleFactor * 42}px;">${renderRichTextHtml(state.subtitle)}</div>` : ''}
                         </div>
                     </div>` : ''}
 

@@ -46,7 +46,7 @@ function renderRichTextHtml(text) {
   if (!text) return '';
   return parseRichText(text)
     .map((paragraph) => {
-      if (paragraph.length === 0) return '<span class="block w-full text-left">&nbsp;</span>';
+      if (paragraph.length === 0) return '<span class="block w-full text-left" style="text-wrap: pretty;">&nbsp;</span>';
 
       const content = paragraph
         .map((segment) => {
@@ -61,7 +61,7 @@ function renderRichTextHtml(text) {
         })
         .join('');
 
-      return `<span class="block w-full text-left">${content}</span>`;
+      return `<span class="block w-full text-left" style="text-wrap: pretty;">${content}</span>`;
     })
     .join('');
 }

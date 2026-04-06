@@ -61,6 +61,17 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
     ctx.closePath();
 }
 
+function getPreviewOverlayHeight(format, fallbackHeight) {
+    const preview = document.getElementById(`preview-${format.id}`);
+    const box = document.getElementById(`headline-box-${format.id}`);
+
+    if (!preview || !box || preview.offsetHeight <= 0 || box.offsetHeight <= 0) {
+        return fallbackHeight;
+    }
+
+    return (box.offsetHeight / preview.offsetHeight) * format.height;
+}
+
 async function generateAndDownloadImage(
   format,
   baseImageElement,
@@ -181,7 +192,8 @@ async function generateAndDownloadImage(
 
     textHeight = eyebrowHeight + headlineHeight + subtitleHeight;
     boxContentHeight = format.hasLogo ? Math.max(textHeight, logoSize) : textHeight;
-    const boxHeight = boxContentHeight + padding * 2;
+    const estimatedBoxHeight = boxContentHeight + padding * 2;
+    const boxHeight = getPreviewOverlayHeight(format, estimatedBoxHeight);
 
     const safeAreaMarginPercent = 0.05; 
     const marginPx = format.height * safeAreaMarginPercent;
@@ -302,33 +314,17 @@ async function generateAndDownloadImage(
         }
 
         if (textContent.headline) {
-            ctx.shadowColor = "rgba(0,0,0,0.5)";
-            ctx.shadowBlur = safeScale * 12;
-            ctx.shadowOffsetY = safeScale * 4;
-            
             ctx.font = `bold ${safeScale * 65}px 'Archivo', sans-serif`;
             const lines = window.richTextService.parseRichTextToLines(ctx, textContent.headline, `bold ${safeScale * 65}px 'Archivo', sans-serif`, textW);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 75, textW, templateStyles.textColor, true);
-            
-            ctx.shadowColor = "transparent";
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
             currentY += lines.length * safeScale * 75;
         }
 
         if (textContent.showSubtitleInput !== false && textContent.subtitle) {
             currentY += safeScale * 16;
-            ctx.shadowColor = "rgba(0,0,0,0.8)";
-            ctx.shadowBlur = safeScale * 8;
-            ctx.shadowOffsetY = safeScale * 2;
-            
             ctx.font = `${safeScale * 32}px 'Archivo', sans-serif`;
             const lines = window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * 32}px 'Archivo', sans-serif`, textW);
             window.richTextService.drawRichTextLines(ctx, lines, currentX, currentY, safeScale * 42, textW, templateStyles.subtitleColor);
-            
-            ctx.shadowColor = "transparent";
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
         }
         
     } else if (templateStyles.layoutType === constants.LAYOUT_TYPE.QUOTE) {
