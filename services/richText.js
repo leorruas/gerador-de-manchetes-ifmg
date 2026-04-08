@@ -91,6 +91,116 @@ function measureToken(context, token, baseFont) {
   return width;
 }
 
+function measureTokensWidth(context, tokens, baseFont) {
+  return tokens.reduce((total, token) => total + measureToken(context, token, baseFont), 0);
+}
+
+function buildWordUnits(tokens) {
+  const units = [];
+  let currentTokens = [];
+  let currentGap = [];
+
+  tokens.forEach((token) => {
+    if (token.isWhitespace) {
+      if (currentTokens.length > 0) currentGap.push(token);
+      return;
+    }
+
+    if (currentTokens.length === 0) {
+      currentTokens.push(token);
+      return;
+    }
+
+    if (currentGap.length > 0) {
+      units.push({ tokens: currentTokens, gapTokens: currentGap });
+      currentTokens = [token];
+      currentGap = [];
+      return;
+    }
+
+    currentTokens.push(token);
+  });
+
+  if (currentTokens.length > 0) {
+    units.push({ tokens: currentTokens, gapTokens: [] });
+  }
+
+  return units;
+}
+
+function buildBalancedLines(context, units, baseFont, maxWidth) {
+  if (units.length === 0) return [];
+  if (units.length === 1) return [units[0].tokens];
+
+  const n = units.length;
+  const wordWidths = units.map((unit) => measureTokensWidth(context, unit.tokens, baseFont));
+  const gapWidths = units.map((unit) => measureTokensWidth(context, unit.gapTokens, baseFont));
+  const prefixWordWidths = [0];
+  const prefixGapWidths = [0];
+
+  for (let i = 0; i < n; i += 1) {
+    prefixWordWidths.push(prefixWordWidths[i] + wordWidths[i]);
+    prefixGapWidths.push(prefixGapWidths[i] + gapWidths[i]);
+  }
+
+  function getLineWidth(start, end) {
+    const wordsWidth = prefixWordWidths[end + 1] - prefixWordWidths[start];
+    const gapsWidth = end > start ? prefixGapWidths[end] - prefixGapWidths[start] : 0;
+    return wordsWidth + gapsWidth;
+  }
+
+  const costs = new Array(n + 1).fill(Infinity);
+  const breaks = new Array(n).fill(n - 1);
+  costs[n] = 0;
+
+  for (let start = n - 1; start >= 0; start -= 1) {
+    for (let end = start; end < n; end += 1) {
+      const lineWidth = getLineWidth(start, end);
+      const singleLongWord = start === end && lineWidth > maxWidth;
+
+      if (lineWidth > maxWidth && !singleLongWord) break;
+
+      const slack = Math.max(0, maxWidth - lineWidth);
+      let penalty = slack * slack;
+
+      if (end === n - 1) {
+        penalty *= 0.65;
+        if (start > 0 && lineWidth < maxWidth * 0.35) {
+          penalty += maxWidth * maxWidth;
+        }
+      } else if (lineWidth < maxWidth * 0.45) {
+        penalty += slack * slack * 0.35;
+      }
+
+      const totalCost = penalty + costs[end + 1];
+      if (totalCost < costs[start]) {
+        costs[start] = totalCost;
+        breaks[start] = end;
+      }
+    }
+  }
+
+  const lines = [];
+  let start = 0;
+
+  while (start < n) {
+    const end = breaks[start];
+    const line = [];
+
+    for (let index = start; index <= end; index += 1) {
+      line.push(...units[index].tokens);
+      if (index < end) {
+        line.push(...units[index].gapTokens);
+      }
+    }
+
+    lines.push(trimLine(line));
+    start = end + 1;
+  }
+
+  return lines;
+}
+
 function parseRichTextToLines(context, text, baseFont, maxWidth) {
   if (!text || String(text).trim() === '') return [];
   const paragraphs = parseRichText(String(text));
@@ -104,30 +214,8 @@ function parseRichTextToLines(context, text, baseFont, maxWidth) {
     if (tokens.length === 0) {
       lines.push([]);
     } else {
-      let currentLine = [];
-      let currentWidth = 0;
-
-      tokens.forEach((token) => {
-        const tokenWidth = measureToken(context, token, baseFont);
-        const exceedsWidth = currentWidth + tokenWidth > maxWidth;
-
-        if (exceedsWidth && currentLine.length > 0 && !token.isWhitespace) {
-          lines.push(trimLine(currentLine));
-          currentLine = [];
-          currentWidth = 0;
-        }
-
-        if (currentLine.length === 0 && token.isWhitespace) {
-          return;
-        }
-
-        currentLine.push(token);
-        currentWidth += tokenWidth;
-      });
-
-      if (currentLine.length > 0) {
-        lines.push(trimLine(currentLine));
-      }
+      const units = buildWordUnits(tokens);
+      lines.push(...buildBalancedLines(context, units, baseFont, maxWidth));
     }
 
     if (paragraphIndex < paragraphs.length - 1) {

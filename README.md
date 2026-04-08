@@ -62,6 +62,7 @@ O projeto segue um caminho único: **aplicação estática em JavaScript puro**.
 - Templates institucionais básicos.
 - Ajustes de responsividade para mobile.
 - Acessibilidade mínima com foco visível, `aria-label` e `Esc` para fechar o modal.
+- Quebra de linha balanceada na exportação para evitar linhas finais muito curtas nas artes com texto.
 
 ## 5. Deploy no GitHub Pages
 

@@ -35,8 +35,8 @@ const FORMATS = {
   [FormatId.PORTAL_PRINCIPAL]: {
     id: FormatId.PORTAL_PRINCIPAL,
     name: 'Portal Principal',
-    width: 743,
-    height: 423,
+    width: 768,
+    height: 497,
     hasText: false,
     hasLogo: false,
   },

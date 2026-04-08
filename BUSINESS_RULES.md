@@ -14,7 +14,7 @@
 | 1 | Instagram Post | 1080 × 1350 | ✅ | ✅ |
 | 2 | Instagram Stories | 1080 × 1920 | ✅ | ✅ |
 | 3 | Portal dos Campi | 400 × 400 | ❌ | ❌ |
-| 4 | Portal Principal | 743 × 423 | ❌ | ❌ |
+| 4 | Portal Principal | 768 × 497 | ❌ | ❌ |
 
 ---
 
@@ -43,6 +43,7 @@ A aplicação oferece **6 templates** selecionáveis, cada um com um layout e id
     -   `*texto*` → *itálico*
     -   `$$texto$$` → destaque em verde (`#22c55e`)
     -   Quebras de linha manuais com `Enter`
+    -   Na exportação, o app rebalanceia as quebras automáticas para reduzir linhas finais muito curtas
     -   Cada formato tem sua própria manchete independente, mas há um botão para sincronizar o texto de um formato com os demais.
 -   **Subtítulo:** Campo opcional de apoio textual.
 
