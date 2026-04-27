@@ -101,9 +101,6 @@ window.startHeadlineEdit = (formatId) => {
     }
 };
 
-    renderApp();
-};
-
 window.toggleAutoSync = () => {
     state.autoSync = !state.autoSync;
     
