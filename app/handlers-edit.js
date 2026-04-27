@@ -182,8 +182,6 @@ window.syncSlides = (event, scope) => {
         if (slide.id === source.id) return;
         if (scope === 'headline') {
             slide.headlines = { ...source.headlines };
-            slide.eyebrows = { ...source.eyebrows };
-            slide.subtitles = { ...source.subtitles };
             return;
         }
 
@@ -200,6 +198,25 @@ window.syncSlides = (event, scope) => {
     schedulePersist();
     showFeedback(`${label} para os outros slides.`, 'success');
     renderApp();
+};
+
+window.setStoryLayout = (event, layout) => {
+    const button = event.target.closest('[data-format-id]');
+    const formatId = button?.dataset.formatId;
+    if (!formatId) return;
+    state.storyLayoutMode[formatId] = layout;
+    schedulePersist();
+    renderApp();
+};
+
+window.handleStoryColor1 = (event) => {
+    state.storyColor1 = event.target.value;
+    schedulePersist();
+};
+
+window.handleStoryColor2 = (event) => {
+    state.storyColor2 = event.target.value;
+    schedulePersist();
 };
 
 window.stopEventPropagation = (event) => {

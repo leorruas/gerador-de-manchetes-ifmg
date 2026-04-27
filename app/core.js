@@ -4,7 +4,7 @@ const constants = window.appConstants;
 const canvasExport = window.canvasExportService;
 const { renderRichTextHtml } = window.richTextService;
 const STORAGE_KEY = 'mancheteexpress:editor-state';
-const STATE_SCHEMA_VERSION = 3;
+const STATE_SCHEMA_VERSION = 4;
 const DEFAULT_TEMPLATE_ID = constants.TEMPLATE_ID.NEWS;
 
 const createDefaultPositions = () =>
@@ -34,6 +34,9 @@ let state = {
     showSubtitleInput: false,
     contrastBoost: {},
     hideText: {}, // { 'instagram-post': true/false }
+    storyColor1: '#0F172A',
+    storyColor2: '#1E293B',
+    storyLayoutMode: Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: 'gradient_bottom' }), {}),
 
     // === Metadados do App Global (Array) ===
     slides: [], 
@@ -84,6 +87,9 @@ function loadSlideToState(slideId) {
         state.showSubtitleInput = target.showSubtitleInput;
         state.contrastBoost = { ...target.contrastBoost };
         state.hideText = typeof target.hideText === 'boolean' ? {} : { ...target.hideText };
+        state.storyColor1 = target.storyColor1 || '#0F172A';
+        state.storyColor2 = target.storyColor2 || '#1E293B';
+        state.storyLayoutMode = target.storyLayoutMode ? { ...target.storyLayoutMode } : Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: 'gradient_bottom' }), {});
         
         state.baseImageElement.src = target.baseImage;
     }
@@ -106,89 +112,15 @@ function saveStateToSlides() {
         target.showSubtitleInput = state.showSubtitleInput;
         target.contrastBoost = { ...state.contrastBoost };
         target.hideText = { ...state.hideText };
+        target.storyColor1 = state.storyColor1;
+        target.storyColor2 = state.storyColor2;
+        target.storyLayoutMode = { ...state.storyLayoutMode };
+        // Colors are global — propagate to all slides (Layout mode remains per-slide)
+        state.slides.forEach(s => {
+            s.storyColor1 = state.storyColor1;
+            s.storyColor2 = state.storyColor2;
+        });
     }
-}
-
-function getPersistedState() {
-    try {
-        const saved = window.localStorage.getItem(STORAGE_KEY);
-        const parsed = saved ? JSON.parse(saved) : null;
-        if (parsed && !parsed.schemaVersion) {
-            parsed.schemaVersion = 1;
-        }
-        if(parsed && !parsed.slides && parsed.baseImage) {
-            // Compatibilidade Reversa (Migração State V1 para V2)
-            parsed.id = Date.now().toString();
-            parsed.slides = [ {
-                 id: parsed.id,
-                 baseImage: parsed.baseImage,
-                 templateId: parsed.templateId,
-                 eyebrow: parsed.eyebrow,
-                 headlines: parsed.headlines,
-                 subtitle: parsed.subtitle,
-                 slug: parsed.slug,
-                 textVerticalPositions: parsed.textVerticalPositions,
-                 transforms: parsed.transforms,
-                 showEyebrowInput: parsed.showEyebrowInput,
-                 showSubtitleInput: parsed.showSubtitleInput,
-                 contrastBoost: parsed.contrastBoost || {},
-                 hideText: typeof parsed.hideText === 'boolean' ? {} : (parsed.hideText || {})
-            } ];
-            parsed.activeSlideId = parsed.id;
-        }
-
-        // Migração V2 para V3 (Auto-Sync)
-        if (parsed && parsed.schemaVersion < 3) {
-            const migrateSlide = (slide) => {
-                if (!slide.eyebrows) {
-                    slide.eyebrows = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: slide.eyebrow || '' }), {});
-                    delete slide.eyebrow;
-                }
-                if (!slide.subtitles) {
-                    slide.subtitles = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: slide.subtitle || '' }), {});
-                    delete slide.subtitle;
-                }
-                if (slide.autoSync === undefined) slide.autoSync = true;
-            };
-
-            if (parsed.slides) parsed.slides.forEach(migrateSlide);
-            // Handle root state if it was partially loaded (legacy)
-            if (parsed.eyebrow !== undefined) {
-                parsed.eyebrows = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: parsed.eyebrow || '' }), {});
-                delete parsed.eyebrow;
-            }
-            if (parsed.subtitle !== undefined) {
-                parsed.subtitles = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: parsed.subtitle || '' }), {});
-                delete parsed.subtitle;
-            }
-            if (parsed.autoSync === undefined) parsed.autoSync = true;
-            parsed.schemaVersion = 3;
-        }
-        return parsed;
-    } catch (error) {
-        console.error('Persisted state could not be read:', error);
-        return null;
-    }
-}
-
-function persistState() {
-    try {
-        saveStateToSlides(); // Garante o array cacheado sincrono ao atual
-        const stateToPersist = {
-            baseImage: state.baseImage, // keeps active slide for legacy history compat partially
-            schemaVersion: STATE_SCHEMA_VERSION,
-            slides: state.slides,
-            activeSlideId: state.activeSlideId,
-        };
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToPersist));
-    } catch (error) {
-        console.error('Persisted state could not be saved:', error);
-    }
-}
-
-function schedulePersist() {
-    window.clearTimeout(schedulePersist.timeoutId);
-    schedulePersist.timeoutId = window.setTimeout(persistState, 120);
 }
 
 function clamp(value, min, max) {
@@ -227,9 +159,6 @@ window.mancheteApp = {
   showFeedback,
   loadSlideToState,
   saveStateToSlides,
-  getPersistedState,
-  persistState,
-  schedulePersist,
   clamp,
   applyTemplate,
 };

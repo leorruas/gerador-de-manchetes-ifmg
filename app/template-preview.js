@@ -2,19 +2,26 @@
 (() => {
 const { constants, state, renderRichTextHtml, getPreviewImageMetrics } = window.mancheteApp;
 const { TEXT_BOX, TEMPLATE_TEXT, getScale, px } = window.layoutTokens;
+const { renderStoryLayoutControls, renderSlideNavigator, renderCarouselStoryOverlay } = window.templatePreviewStory;
 const ImagePreview = (format) => {
     const transform = state.transforms[format.id];
     const isCropping = state.croppingFormatId === format.id;
     const imageMetrics = getPreviewImageMetrics(format, transform);
-    
     const previewWidth = Math.min(window.innerWidth - 32, 640);
     const scaleFactor = getScale(format, previewWidth);
     const glass = TEMPLATE_TEXT.glass;
     const gradient = TEMPLATE_TEXT.gradient;
     const quote = TEMPLATE_TEXT.quote;
     const infographic = TEMPLATE_TEXT.infographic;
-    
     const templateStyles = constants.TEMPLATES[state.templateId];
+    const slideIndex = state.slides && state.slides.length > 0 ? state.slides.findIndex(s => s.id === state.activeSlideId) : 0;
+    const totalSlides = state.slides && state.slides.length > 0 ? state.slides.length : 1;
+    const isFirstSlide = slideIndex <= 0;
+    const isLastSlide = slideIndex === totalSlides - 1 || totalSlides === 1;
+    const storyLayoutMode = state.storyLayoutMode ? state.storyLayoutMode[format.id] || 'gradient_bottom' : 'gradient_bottom';
+    const storyColor = slideIndex % 2 === 1 ? state.storyColor2 : state.storyColor1;
+    const storyBgColor = slideIndex % 2 === 1 ? state.storyColor1 : state.storyColor2;
+    const isCarouselStory = templateStyles.layoutType === constants.LAYOUT_TYPE.CAROUSEL_STORY;
 
     const floatButtonsHtml = `
     <div class="absolute left-0 w-full flex justify-center gap-2 z-30 pointer-events-auto" style="top: -40px;">
@@ -25,46 +32,36 @@ const ImagePreview = (format) => {
              ${state.showSubtitleInput ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>Subtítulo' : '<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>Subtítulo'}
          </button>
     </div>`;
-
-
     return `
         <div class="bg-zinc-900/50 p-4 sm:p-6 rounded-2xl border border-zinc-800 shadow-2xl transition-all duration-300 hover:border-zinc-700 mb-16 last:mb-0">
             <h3 class="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-[0.2em] mb-4 px-1 flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400/50"></span>
                 ${format.name} <span class="opacity-40 font-medium text-[9px] sm:text-[10px]">(${format.width}x${format.height})</span>
             </h3>
-            
-            <div class="flex gap-2 mb-3 overflow-x-auto hide-scrollbar scroll-smooth">
+            ${!isCropping ? `
+            <div class="flex flex-col gap-2 mb-3">
                ${state.slides && state.slides.length > 1 ? `
-               <div class="flex items-center gap-1 bg-zinc-800 p-1 rounded-full border border-zinc-700">
-                   ${state.slides.map((s, idx) => `
-                       <button data-action="handleSlideSwitch" data-slide-id="${s.id}" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 ${state.activeSlideId === s.id ? 'bg-amber-400 text-black shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}">
-                           ${idx + 1}
-                       </button>
-                   `).join('')}
-                   <button data-action="addSlide" class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-amber-400 hover:bg-zinc-700 transition-colors focus:outline-none" title="Adicionar Foto">
-                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                   </button>
-               </div>
+               ${renderSlideNavigator(state)}
+               ${!isCarouselStory ? `
                <div class="flex items-center gap-1 bg-zinc-800 p-1 rounded-full border border-zinc-700">
                    <button data-action="syncSlides" data-scope="headline" class="px-3 h-8 rounded-full text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400" title="Copiar manchetes do slide atual para os outros slides">Manchetes</button>
                    <button data-action="syncSlides" data-scope="metadata" class="px-3 h-8 rounded-full text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400" title="Copiar editoria, subtítulo, template e slug para os outros slides">Metadados</button>
                </div>
                ` : ''}
-               
+               ${isCarouselStory ? `
+               ${renderStoryLayoutControls(format, storyLayoutMode)}
+               ` : ''}
+               ` : ''}
              </div>
+             ` : ''}
 
-            <div id="preview-${format.id}" 
-                 class="relative bg-black rounded-[0.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.8)] w-full border border-zinc-800 ${isCropping ? 'cursor-grab' : ''}" 
-                 style="aspect-ratio: ${format.width} / ${format.height}"
-                 data-drag-type="${isCropping ? 'crop' : ''}" data-format-id="${format.id}">
-                
-                <img id="preview-image-${format.id}" src="${state.baseImage}" alt="Preview ${format.name}" class="absolute pointer-events-none max-w-none shadow-xl" 
-                     style="width:${imageMetrics ? imageMetrics.widthPercent : 100}%; height:${imageMetrics ? imageMetrics.heightPercent : 100}%; left:${imageMetrics ? imageMetrics.leftPercent : 0}%; top:${imageMetrics ? imageMetrics.topPercent : 0}%; border-radius: ${transform.fitMode === 'contain' ? (previewWidth * 0.03) + 'px' : '0'}; object-fit: cover;">
-
-                ${(format.hasText && !state.hideText[format.id]) ? `
+            <div id="preview-${format.id}" class="relative bg-black rounded-[0.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.8)] w-full border border-zinc-800 ${isCropping ? 'cursor-grab' : ''}" style="aspect-ratio: ${format.width} / ${format.height}" data-drag-type="${isCropping ? 'crop' : ''}" data-format-id="${format.id}">
+                <img id="preview-image-${format.id}" src="${state.baseImage}" alt="Preview ${format.name}" class="absolute pointer-events-none max-w-none shadow-xl" style="width:${imageMetrics ? imageMetrics.widthPercent : 100}%; height:${imageMetrics ? imageMetrics.heightPercent : 100}%; left:${imageMetrics ? imageMetrics.leftPercent : 0}%; top:${imageMetrics ? imageMetrics.topPercent : 0}%; border-radius: ${transform.fitMode === 'contain' ? (previewWidth * 0.03) + 'px' : '0'}; object-fit: cover; ${(!isCropping && templateStyles.layoutType === constants.LAYOUT_TYPE.CAROUSEL_STORY && storyLayoutMode === 'solid_color') ? 'visibility: hidden;' : ''}">
+                 ${!isCropping && templateStyles.layoutType === constants.LAYOUT_TYPE.CAROUSEL_STORY && storyLayoutMode === 'solid_color' ? `
+                     <div class="absolute inset-0 z-0" style="background-color: ${storyBgColor};"></div>
+                 ` : ''}
+                ${(format.hasText && !state.hideText[format.id] && !isCropping) ? `
                     ${format.id === 'instagram-story' ? `
-                    <!-- Instagram Story Safe Zones -->
                     <div class="absolute inset-x-0 top-0 h-[10%] border-b border-dashed border-white/20 bg-black/20 pointer-events-none z-30 flex items-start justify-center pt-4">
                         <span class="text-white/50 text-xs font-bold uppercase tracking-widest bg-black/40 px-2 py-1 rounded border border-white/10 blur-[0.5px]">Área do Perfil (Evite Textos)</span>
                     </div>
@@ -72,14 +69,11 @@ const ImagePreview = (format) => {
                         <span class="text-white/50 text-xs font-bold uppercase tracking-widest bg-black/40 px-2 py-1 rounded border border-white/10 blur-[0.5px]">Área de Interação (Evite Textos)</span>
                     </div>
                     ` : ''}
-
-                    
                     ${templateStyles.layoutType === constants.LAYOUT_TYPE.GLASS_BOX ? `
                     <div id="headline-box-${format.id}" class="absolute" tabindex="0" aria-label="Mover texto ${format.name}" style="width:${TEXT_BOX.widthRatio * 100}%; left:${TEXT_BOX.leftRatio * 100}%;" data-drag-type="text" data-format-id="${format.id}">
                          ${floatButtonsHtml}
                          <div class="rounded-2xl cursor-grab flex items-center relative group transition-all duration-300" 
                               style="padding: ${px(scaleFactor, glass.padding)}px; background-color: ${templateStyles.backgroundColor}; backdrop-filter: ${state.contrastBoost[format.id] ? 'blur(12px) brightness(0.6)' : 'blur(4px)'}; -webkit-backdrop-filter: ${state.contrastBoost[format.id] ? 'blur(12px) brightness(0.6)' : 'blur(4px)'}; ${state.contrastBoost[format.id] ? 'box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);' : ''}">
-
                             ${format.hasLogo ? `<div style="width:${px(scaleFactor, glass.logoSize)}px; height:${px(scaleFactor, glass.logoSize)}px; margin-right:${px(scaleFactor, glass.logoGap)}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
                             <div class="flex-grow min-w-0 flex flex-col items-start text-left relative">
                                 ${state.showEyebrowInput ? `
@@ -110,7 +104,6 @@ const ImagePreview = (format) => {
                          ${floatButtonsHtml}
                          <div class="cursor-grab flex flex-col items-start relative group" style="padding: ${px(scaleFactor, gradient.padding)}px;">
                             ${format.hasLogo ? `<div style="width:${px(scaleFactor, gradient.logoSize)}px; height:${px(scaleFactor, gradient.logoSize)}px; margin-bottom:${px(scaleFactor, gradient.logoGap)}px" class="flex-shrink-0">${constants.IFMG_LOGO_SVG_STRING}</div>` : ''}
-                            
                             ${state.showEyebrowInput ? `
                                 <div id="eyebrow-text-${format.id}" class="block w-full text-left uppercase mb-3 font-bold cursor-text" data-action="startEyebrowEdit" data-format-id="${format.id}" style="letter-spacing:${gradient.eyebrowTrackingEm}em; color: ${templateStyles.eyebrowColor}; font-size:${px(scaleFactor, gradient.eyebrowSize)}px; line-height:${px(scaleFactor, gradient.eyebrowLineHeight)}px;">${state.eyebrows[format.id] || 'EDITAR EDITORIA'}</div>
                                 <textarea id="eyebrow-textarea-${format.id}" data-action="updateEyebrow" data-blur-action="finishEyebrowEdit" data-format-id="${format.id}" 
@@ -187,8 +180,14 @@ const ImagePreview = (format) => {
                             ` : ''}
                         </div>
                     </div>` : ''}
+                    ${templateStyles.layoutType === constants.LAYOUT_TYPE.CAROUSEL_STORY ? (() => {
+                        const storyHeadlineSize = isFirstSlide ? gradient.headlineSize * 1.3 : gradient.headlineSize * 0.85;
+                        const storyLineHeight = isFirstSlide ? gradient.headlineLineHeight * 1.15 : gradient.headlineLineHeight * 0.85;
+                        const storyLogoSize = gradient.logoSize * 2.2;
+                        const storyShadow = storyLayoutMode === 'solid_color' ? 'none' : '0px ' + px(scaleFactor, gradient.shadowOffsetY) + 'px ' + px(scaleFactor, gradient.shadowBlur) + 'px rgba(0,0,0,0.5)';
+                        return renderCarouselStoryOverlay({ constants, state, format, gradient, scaleFactor, px, TEXT_BOX, templateStyles, storyLayoutMode, storyColor, storyShadow, storyHeadlineSize, storyLineHeight, storyLogoSize, isFirstSlide, isLastSlide, floatButtonsHtml, renderRichTextHtml });
+                    })() : ''}
                 ` : ''}
-                
                 ${!isCropping ? `
                   <div class="absolute top-2 right-2 flex gap-2 z-20">
                       ${format.hasText ? `
@@ -219,7 +218,7 @@ const ImagePreview = (format) => {
 
                  ${isCropping ? `
                     <div class="absolute inset-0 bg-black/40 pointer-events-none"></div>
-                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-md bg-black/60 backdrop-blur-sm rounded-3xl p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 z-10" data-stop-propagation="true">
+                    <div class="absolute left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-md bg-black/60 backdrop-blur-sm rounded-3xl p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 z-10" style="bottom: max(1rem, env(safe-area-inset-bottom));" data-stop-propagation="true">
                         <div class="flex items-center gap-2 flex-grow min-w-0">
                             <button aria-label="Diminuir zoom" data-action="adjustZoom" data-delta="-0.1" class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-400">-</button>
                             <input type="range" id="zoom-slider-${format.id}" min="1" max="3" step="0.01" value="${transform.zoom}" data-action="handleZoomChange" data-stop-propagation="true"

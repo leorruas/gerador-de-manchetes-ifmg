@@ -30,6 +30,7 @@ O sistema utiliza padrões claros para botões baseados no Tailwind CSS:
   - Headlines: `700 (Bold)`.
   - Quotes: `Italic Bold`.
   - Subtítulos e Eyebrows: `400 (Regular)`.
+- **Carrossel (História Completa)**: Utiliza a fonte **Montagu Slab** com variações de escala entre a capa (1.3x) e os slides internos (0.85x).
 
 ## 4. Governança de Eventos (v2)
 
@@ -54,8 +55,8 @@ Para manter os templates HTML limpos e modulares, **não utilizamos handlers inl
 
 ## 6. Logo IFMG
 
-- **Tamanho**: `140px` (escala 1080px).
-- **Posição**: Alinhado à esquerda na Glass Box ou centralizado em Infográficos.
+- **Tamanho**: `140px` (escala 1080px). No formato **Carrossel**, utiliza escala de **2.2x**.
+- **Posição**: Alinhado à esquerda na Glass Box ou centralizado em Infográficos. No Carrossel, aparece apenas no slide final.
 
 ## 7. Controles de Preview e Edição
 
@@ -66,7 +67,9 @@ Estes botões ficam fixos no topo do card de cada formato:
 - **Olhinho (Imagem Pura)**: Permite ocultar todos os elementos de texto temporariamente para validar o enquadramento da foto.
 - **Contraste (Contrast Boost)**: Exclusivo para o template **Glass Box**. Aumenta o desfoque para 12px e aplica um brilho de 0.6, garantindo legibilidade em fotos com áreas muito claras.
 - **Ajustar/Preencher**: Alterna o modo de exibição da imagem (Contain vs Cover).
+- **Layout de Fundo**: Botões para alternar entre **Degradê Inferior**, **Degradê Superior** e **Fundo Sólido** (comportamento individual por slide).
 - **Navegação de Slides**: Botões circulares numerados acima do preview para alternar entre as fotos do carrossel.
+- **Reordenar Slides**: Os botões de navegação do carrossel suportam **arrastar e soltar** (Drag & Drop), permitindo que o usuário altere a sequência narrativa das fotos após o upload.
 
 ### Controles de Contexto (Floating Buttons)
 Os botões de ativação de campos opcionais flutuam diretamente sobre a caixa de texto:

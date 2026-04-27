@@ -25,6 +25,9 @@ window.restoreHistoryItem = async (id) => {
         if (item) {
             // Restore state logic
             state.slides = item.slides || [];
+            if (state.slides.length <= 1 && state.slides[0]?.templateId === constants.TEMPLATE_ID.CAROUSEL_STORY) {
+                state.slides[0].templateId = DEFAULT_TEMPLATE_ID;
+            }
             
             if (state.slides.length > 0) {
                 // Version 2 structure
@@ -34,6 +37,7 @@ window.restoreHistoryItem = async (id) => {
                 // Legacy Version 1 restore mapped to new structure
                 state.baseImage = item.baseImage;
                 state.templateId = item.templateId;
+                if (state.templateId === constants.TEMPLATE_ID.CAROUSEL_STORY) state.templateId = DEFAULT_TEMPLATE_ID;
                 state.eyebrows = item.eyebrows || Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: item.eyebrow || '' }), {});
                 state.headlines = item.headlines;
                 state.subtitles = item.subtitles || Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: item.subtitle || '' }), {});

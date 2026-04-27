@@ -21,11 +21,16 @@ Neste modo, o usuário edita uma única notícia que é replicada automaticament
 - **Portal dos Campi** (400x400)
 - **Portal Principal** (743x423)
 
+### Safe Space (Margem de Segurança)
+Para garantir a integridade do design em todos os enquadramentos:
+- **Template HERO**: Possui uma trava de margem inferior (safe space) que impede que o texto encoste na borda, mantendo o respiro visual mesmo em ajustes manuais de posição.
+
 ### Modo Carrossel
 Permite o upload de até **10 slides** diferentes.
 - Cada slide pode ter sua própria imagem, manchete e enquadramento.
 - O usuário navega entre slides por uma barra de miniaturas.
 - **Limite de Memória**: O sistema bloqueia novos uploads se o total acumulado em Base64 ultrapassar **45 MB**, visando estabilidade em dispositivos móveis.
+- **Normalização de Imagem**: Todo upload passa por um processo de redimensionamento automático para no máximo **2400px** (maior lado) e compressão via Canvas antes de entrar no estado da aplicação.
 
 ## 2. Sistema de Templates
 
@@ -48,6 +53,7 @@ Existem **6 templates** que alteram drasticamente a composição visual:
 - **Sincronização entre Slides (Carrossel)**:
   - **Sincronizar Manchetes**: Copia textos entre slides diferentes.
   - **Sincronizar Metadados**: Copia template, visibilidade de campos e contraste entre slides.
+  - **Escopo de Auto-Sync**: No carrossel, o "Auto-Sync Global" sincroniza apenas as **Editorias**, permitindo que cada slide tenha sua própria manchete/narrativa.
 
 ### Visibilidade de Campos Opcionais
 - Os campos **Editoria** e **Subtítulo** são opcionais.
@@ -76,10 +82,13 @@ Existem **6 templates** que alteram drasticamente a composição visual:
 - **Controle de Peso**: Se o arquivo gerado for maior que **1.5 MB**, o sistema exibe um alerta de confirmação.
 - **Nomenclatura**: `AAAA-MM-DD_ifmg_slug_nome-formato_WxH.ext`.
 
-### Persistência Local
-- **IndexedDB**: Salva os últimos 10 rascunhos exportados.
-- **LocalStorage**: Mantém o estado atual da edição com `schemaVersion: 2`.
-- **Migração**: Estados v1 são automaticamente migrados para a estrutura de slides da v2 no primeiro carregamento.
+### Persistência Híbrida (v4)
+- **LocalStorage**: Mantém apenas a estrutura lógica (textos, coordenadas, templates) sob o `schemaVersion: 4`. As imagens são removidas do JSON antes do salvamento (`stripImagesFromState`).
+- **IndexedDB**: Armazena as imagens binárias (Base64) indexadas pelo ID do slide. Isso remove o limite teórico de 5MB, permitindo carrosséis complexos com alta fidelidade.
+- **Migração**: O sistema detecta versões antigas (v1, v2 e v3) e realiza a migração automática:
+    - **v1 -> v2**: Transforma o objeto único em uma estrutura de lista (`slides`).
+    - **v2 -> v3**: Migra campos simples de texto para objetos por formato.
+    - **v3 -> v4**: Adiciona suporte a layouts individuais de carrossel e extrai imagens para o IndexedDB.
 
 ## 6. Governança de Código
 - **Script Order**: O projeto depende de uma ordem estrita de carregamento em `index.html` devido ao uso de globais.

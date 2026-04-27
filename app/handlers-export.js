@@ -47,23 +47,23 @@ window.handleSlugChange = (event) => {
 
 window.toggleEyebrowInput = () => {
     state.showEyebrowInput = !state.showEyebrowInput;
-    if (!state.showEyebrowInput) {
-        Object.keys(state.eyebrows).forEach(id => state.eyebrows[id] = '');
-    }
+
     schedulePersist();
     renderApp();
 };
 
 window.toggleSubtitleInput = () => {
     state.showSubtitleInput = !state.showSubtitleInput;
-    if (!state.showSubtitleInput) {
-        Object.keys(state.subtitles).forEach(id => state.subtitles[id] = '');
-    }
+
     schedulePersist();
     renderApp();
 };
 
 window.handleTemplateChange = (templateId) => {
+    if (templateId === constants.TEMPLATE_ID.CAROUSEL_STORY && (!state.slides || state.slides.length <= 1)) {
+        showFeedback('O template História Completa fica disponível ao adicionar mais de uma imagem.', 'info');
+        return;
+    }
     applyTemplate(templateId, false);
     schedulePersist();
     renderApp();
@@ -95,7 +95,12 @@ window.handleExport = async (type, event) => {
                     showEyebrowInput: state.showEyebrowInput,
                     showSubtitleInput: state.showSubtitleInput,
                     contrastBoost: !!(state.contrastBoost && state.contrastBoost[formatId]),
-                    hideText: !!(state.hideText && state.hideText[formatId])
+                    hideText: !!(state.hideText && state.hideText[formatId]),
+                    slideIndex: state.slides && state.slides.length > 0 ? state.slides.findIndex(s => s.id === state.activeSlideId) : 0,
+                    totalSlides: state.slides && state.slides.length > 0 ? state.slides.length : 1,
+                    storyLayoutMode: state.storyLayoutMode ? state.storyLayoutMode[formatId] || 'gradient_bottom' : 'gradient_bottom',
+                    storyColor1: state.storyColor1 || '#000000',
+                    storyColor2: state.storyColor2 || '#111111'
                 },
                 state.textVerticalPositions[format.id],
                 state.slug,
@@ -158,7 +163,12 @@ window.handleBatchExport = async (type, event) => {
                         showEyebrowInput: slide.showEyebrowInput,
                         showSubtitleInput: slide.showSubtitleInput,
                         contrastBoost: !!(slide.contrastBoost && slide.contrastBoost[formatId]),
-                        hideText: !!(slide.hideText && slide.hideText[formatId])
+                        hideText: !!(slide.hideText && slide.hideText[formatId]),
+                        slideIndex: i - 1,
+                        totalSlides: state.slides.length,
+                        storyLayoutMode: slide.storyLayoutMode ? slide.storyLayoutMode[formatId] || 'gradient_bottom' : 'gradient_bottom',
+                        storyColor1: slide.storyColor1 || '#000000',
+                        storyColor2: slide.storyColor2 || '#111111'
                     },
                     slide.textVerticalPositions && slide.textVerticalPositions[formatId] != null ? slide.textVerticalPositions[formatId] : 0.5,
                     `${slide.slug || 'carrossel'}-slide${i}`,

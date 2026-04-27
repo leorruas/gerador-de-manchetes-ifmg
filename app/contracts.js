@@ -9,6 +9,7 @@ const requiredGlobals = [
   'canvasExportText',
   'canvasExportService',
   'historyService',
+  'imageStore',
   'mancheteApp',
   'mancheteTemplates',
 ];
@@ -53,6 +54,9 @@ const requiredHandlers = [
   'toggleAutoSync',
   'syncHeadline',
   'syncSlides',
+  'handleSlideReorderStart',
+  'handleSlideReorderOver',
+  'handleSlideReorderDrop',
   'handleTextPositionKeydown',
   'handleGlobalKeydown',
   'stopEventPropagation',

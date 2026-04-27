@@ -11,7 +11,8 @@ function getTextOverlayBox(ctx, format, textContent, textVerticalPercent) {
         NOTICE: TEMPLATE_TEXT.glass,
         HERO: TEMPLATE_TEXT.gradient,
         QUOTE: TEMPLATE_TEXT.quote,
-        NUMBER: TEMPLATE_TEXT.infographic
+        NUMBER: TEMPLATE_TEXT.infographic,
+        CAROUSEL_STORY: TEMPLATE_TEXT.gradient
     };
     const tokens = templateMap[templateId] || TEMPLATE_TEXT.glass;
     
@@ -58,6 +59,8 @@ async function drawTextOverlay(ctx, canvas, format, textContent, textVerticalPer
         await window.canvasExportLayouts.drawQuote(ctx, layoutData);
     } else if (templateStyles.layoutType === constants.LAYOUT_TYPE.INFOGRAPHIC) {
         await window.canvasExportLayouts.drawInfographic(ctx, layoutData);
+    } else if (templateStyles.layoutType === constants.LAYOUT_TYPE.CAROUSEL_STORY) {
+        await window.canvasExportLayouts.drawCarouselStory(ctx, layoutData);
     }
 }
 

@@ -91,6 +91,7 @@ async function downloadCanvas(canvas, format, slug, type) {
 async function generateAndDownloadImage(format, baseImageElement, transform, textContent, textVerticalPercent, slug, type) {
   await document.fonts.load('400 10px Archivo');
   await document.fonts.load('700 10px Archivo');
+  await document.fonts.load('700 10px "Montagu Slab"');
   const canvas = document.createElement('canvas');
   canvas.width = format.width;
   canvas.height = format.height;

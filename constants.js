@@ -58,6 +58,7 @@ const TEMPLATE_ID = {
   HERO: 'HERO',
   QUOTE: 'QUOTE',
   NUMBER: 'NUMBER',
+  CAROUSEL_STORY: 'CAROUSEL_STORY',
 };
 
 const LAYOUT_TYPE = {
@@ -65,6 +66,7 @@ const LAYOUT_TYPE = {
   GRADIENT: 'GRADIENT',
   QUOTE: 'QUOTE',
   INFOGRAPHIC: 'INFOGRAPHIC',
+  CAROUSEL_STORY: 'CAROUSEL_STORY',
 };
 
 const TEMPLATES = {
@@ -130,6 +132,16 @@ const TEMPLATES = {
     textColor: '#FFFFFF',
     eyebrowColor: '#FFFFFF',
     subtitleColor: 'rgba(255, 255, 255, 0.8)'
+  },
+  [TEMPLATE_ID.CAROUSEL_STORY]: {
+    id: TEMPLATE_ID.CAROUSEL_STORY,
+    name: 'História Completa',
+    layoutType: LAYOUT_TYPE.CAROUSEL_STORY,
+    eyebrow: 'História',
+    subtitle: 'Arraste para ler tudo',
+    textColor: '#FFFFFF',
+    eyebrowColor: '#FBBF24', 
+    subtitleColor: 'rgba(255, 255, 255, 0.9)'
   },
 };
 

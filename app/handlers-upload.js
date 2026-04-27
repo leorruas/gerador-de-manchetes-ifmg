@@ -6,6 +6,9 @@ const renderApp = () => window.renderApp();
 const renderModals = () => window.renderModals();
 const MAX_SLIDES = 10;
 const MAX_TOTAL_IMAGE_BYTES = 45 * 1024 * 1024;
+const MAX_UPLOAD_DIMENSION = 2400;
+const NORMALIZED_IMAGE_TYPE = 'image/jpeg';
+const NORMALIZED_IMAGE_QUALITY = 0.88;
 
 function getApproxDataUrlBytes(dataUrl) {
     const payload = String(dataUrl).split(',')[1] || '';
@@ -25,21 +28,69 @@ function readAsDataURLAsync(file) {
     });
 }
 
+function canvasToDataUrl(canvas, type, quality) {
+    return canvas.toDataURL(type, quality);
+}
+
+function loadImageFromUrl(url) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = url;
+    });
+}
+
+async function decodeImageFile(file) {
+    if (window.createImageBitmap) {
+        try {
+            return await createImageBitmap(file, { imageOrientation: 'from-image' });
+        } catch (error) {
+            console.warn('createImageBitmap falhou; usando FileReader como fallback.', error);
+        }
+    }
+    const dataUrl = await readAsDataURLAsync(file);
+    return loadImageFromUrl(dataUrl);
+}
+
+async function normalizeImageFile(file) {
+    const source = await decodeImageFile(file);
+    const sourceWidth = source.naturalWidth || source.width;
+    const sourceHeight = source.naturalHeight || source.height;
+    const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(sourceWidth, sourceHeight));
+    const canvas = document.createElement('canvas');
+
+    canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+    canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+    const context = canvas.getContext('2d');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(source, 0, 0, canvas.width, canvas.height);
+    if (typeof source.close === 'function') source.close();
+
+    return canvasToDataUrl(canvas, NORMALIZED_IMAGE_TYPE, NORMALIZED_IMAGE_QUALITY);
+}
+
 function createSlideData(dataUrl) {
     return {
          id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
          baseImage: dataUrl,
          templateId: state.templateId || DEFAULT_TEMPLATE_ID,
          eyebrow: state.eyebrow || constants.TEMPLATES[DEFAULT_TEMPLATE_ID].eyebrow,
+         eyebrows: Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: state.eyebrows?.[curr.id] || state.eyebrow || constants.TEMPLATES[DEFAULT_TEMPLATE_ID].eyebrow }), {}),
          headlines: Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: state.headlines?.[curr.id] || 'Título da notícia ou chamada para a arte' }), {}),
          subtitle: state.subtitle || '',
+         subtitles: Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: state.subtitles?.[curr.id] || '' }), {}),
          slug: state.slug || 'noticia-exemplo',
          textVerticalPositions: createDefaultPositions(),
          transforms: createDefaultTransforms(),
          showEyebrowInput: state.showEyebrowInput ?? true,
          showSubtitleInput: state.showSubtitleInput ?? false,
          contrastBoost: {},
-         hideText: typeof state.hideText === 'boolean' ? {} : { ...state.hideText }
+         hideText: typeof state.hideText === 'boolean' ? {} : { ...state.hideText },
+         storyColor1: state.storyColor1 || '#0F172A',
+         storyColor2: state.storyColor2 || '#1E293B',
+         storyLayoutMode: state.storyLayoutMode ? { ...state.storyLayoutMode } : Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: 'gradient_bottom' }), {})
     };
 }
 
@@ -63,7 +114,7 @@ window.handleImageFiles = async (filesArray) => {
         }
 
         try {
-            const dataUrl = await readAsDataURLAsync(file);
+            const dataUrl = await normalizeImageFile(file);
             const imageBytes = getApproxDataUrlBytes(dataUrl);
             if (totalImageBytes + imageBytes > MAX_TOTAL_IMAGE_BYTES) {
                 rejectedCount++;
@@ -82,6 +133,11 @@ window.handleImageFiles = async (filesArray) => {
     }
     
     if (firstLoadSlideId) {
+        // Auto-switch to CAROUSEL_STORY when entering carousel mode
+        if (state.slides.length > 1) {
+            applyTemplate(constants.TEMPLATE_ID.CAROUSEL_STORY, false);
+            state.slides.forEach(s => s.templateId = constants.TEMPLATE_ID.CAROUSEL_STORY);
+        }
         loadSlideToState(firstLoadSlideId);
         state.baseImageElement.onload = () => {
              schedulePersist();
@@ -90,6 +146,11 @@ window.handleImageFiles = async (filesArray) => {
         };
         // The src assignment triggers the onload
     } else {
+        // Auto-switch to CAROUSEL_STORY when entering carousel mode
+        if (state.slides.length > 1) {
+            applyTemplate(constants.TEMPLATE_ID.CAROUSEL_STORY, false);
+            state.slides.forEach(s => s.templateId = constants.TEMPLATE_ID.CAROUSEL_STORY);
+        }
         schedulePersist();
         showFeedback(`${files.length - rejectedCount} imagem(ns) adicionada(s) ao Carrossel.${rejectedCount ? ' Algumas foram ignoradas para evitar excesso de memória.' : ''}`, rejectedCount ? 'info' : 'success');
         renderApp();

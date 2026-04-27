@@ -19,6 +19,8 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 | `handlers-history.js` | Interação com o histórico (abrir, restaurar, deletar). |
 | `handlers-edit.js` | Manipuladores de texto, sincronização por escopo no carrossel, zoom e mudanças de template. |
 | `handlers-drag.js` | Lógica de arrasto (texto e crop) nos previews. |
+| `handlers-slides.js` | Reordenação de slides via drag-and-drop no carrossel. |
+| `persistence.js` | Lógica central de salvamento, migração (v1-v4) e hidratação de imagens. |
 
 ### Componentes de UI (`/app`)
 | Arquivo | Responsabilidade |
@@ -36,14 +38,20 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 | `canvasExportText.js` | Lógica de desenho de textos com sombras e estilos. |
 | `canvasExportLayouts*.js` | Implementação visual de cada template no Canvas. |
 | `richText.js` | Parser de markdown para suporte a negrito/itálico no Canvas. |
-| `historyDb.js` | Camada de persistência IndexedDB. |
+| `historyDb.js` | Camada de persistência IndexedDB para rascunhos exportados. |
+| `imageStore.js` | Camada de persistência IndexedDB exclusiva para imagens dos slides. |
 
 ## Fluxo de Dados
 
 1. **Estado Centralizado**: Tudo o que o usuário vê (textos, zoom, posições) está no objeto `state` em `core.js`.
 2. **Reatividade Manual**: Após qualquer mudança no `state`, chamamos `renderApp()` para refletir as mudanças no HTML.
-3. **Eventos e Inputs Globais**: Elementos que precisam persistir entre trocas de tela (como o `<input type="file">` para adição de slides) são mantidos diretamente no `index.html`. A delegacão de eventos em `events.js` garante que esses elementos funcionem em qualquer contexto.
-4. **Exportação**: O Canvas **não** lê o DOM. Ele reconstrói a imagem lendo diretamente o `state`.
+3. **Persistência Híbrida (v4)**:
+    - **Metadados**: Salvos no `localStorage` sob o `schemaVersion: 4`. As imagens são removidas do JSON antes do salvamento (`stripImagesFromState`).
+    - **Imagens**: Armazenadas binariamente (Base64) no **IndexedDB** (`imageStore.js`) indexadas pelo ID do slide. Isso remove o limite de 5MB do LocalStorage.
+    - **Sincronização**: Ao carregar, o sistema realiza a "hidratação", buscando as imagens no IndexedDB e mesclando com os metadados.
+    - **Migração**: Detecta e migra automaticamente versões v1, v2 e v3 para o novo modelo híbrido.
+4. **Eventos e Inputs Globais**: Elementos que precisam persistir entre trocas de tela (como o `<input type="file">` para adição de slides) são mantidos diretamente no `index.html`.
+5. **Exportação**: O Canvas **não** lê o DOM. Ele reconstrói a imagem lendo diretamente o `state`.
 
 ## Qualidade e Limites
 

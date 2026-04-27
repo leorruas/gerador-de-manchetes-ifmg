@@ -70,6 +70,12 @@ const WelcomeScreen = () => {
                         <div class="flex-shrink-0 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center mt-1 text-amber-400">${constants.StepIcon.Export}</div>
                         <div><p class="font-bold text-white">5. Exporte em Carrossel/Lote</p><p class="text-zinc-400">Clique no botão Exportar para gerar o seu post ou baixar individualmente como um único pacote de imagens otimizado!</p></div>
                     </li>
+                     <li class="flex items-start gap-4 mt-6 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
+                        <div class="flex-shrink-0 w-8 h-8 bg-amber-400/10 rounded-full flex items-center justify-center mt-1 text-amber-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <div><p class="font-bold text-amber-400">Novo: História Completa</p><p class="text-zinc-400 text-sm mt-1">Crie carrosséis narrativos sem sair do app. Escolha o template "História Completa", adicione mais fotos, ajuste o layout (fundo sólido, degradês) e veja o logo e tipografia adaptarem-se automaticamente do primeiro ao último slide.</p></div>
+                    </li>
                 </ol>
             </div>
         </div>

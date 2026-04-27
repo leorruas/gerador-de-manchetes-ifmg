@@ -1,13 +1,26 @@
 // Inicializacao: restaura rascunho salvo, liga atalhos globais e faz o primeiro render.
-(() => {
-const { constants, state, STATE_SCHEMA_VERSION, getPersistedState, clamp } = window.mancheteApp;
+(async () => {
+const { constants, state, STATE_SCHEMA_VERSION, getPersistedState, hydratePersistedImages, loadSlideToState, clamp } = window.mancheteApp;
 const renderApp = () => window.renderApp();
 window.addEventListener('keydown', window.handleGlobalKeydown);
-const persistedState = getPersistedState();
+const persistedState = await hydratePersistedImages(getPersistedState());
 if (persistedState) {
     state.schemaVersion = STATE_SCHEMA_VERSION;
+    if (Array.isArray(persistedState.slides) && persistedState.slides.length > 0) {
+        state.slides = persistedState.slides;
+        if (state.slides.length <= 1 && state.slides[0].templateId === constants.TEMPLATE_ID.CAROUSEL_STORY) {
+            state.slides[0].templateId = constants.TEMPLATE_ID.NEWS;
+        }
+        state.baseImageElement.onload = () => {
+            renderApp();
+        };
+        loadSlideToState(persistedState.activeSlideId || persistedState.slides[0].id);
+    }
     if (persistedState.templateId && constants.TEMPLATES[persistedState.templateId]) {
         state.templateId = persistedState.templateId;
+    }
+    if (state.slides.length <= 1 && state.templateId === constants.TEMPLATE_ID.CAROUSEL_STORY) {
+        state.templateId = constants.TEMPLATE_ID.NEWS;
     }
     state.autoSync = persistedState.autoSync ?? state.autoSync;
     if (persistedState.eyebrows) {
@@ -43,7 +56,7 @@ if (persistedState) {
             })
         );
     }
-    if (persistedState.baseImage) {
+    if (!state.baseImage && persistedState.baseImage) {
         state.baseImage = persistedState.baseImage;
         state.baseImageElement.onload = () => {
             renderApp();

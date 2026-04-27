@@ -29,6 +29,7 @@ const clickActions = {
   adjustZoom: (event, el) => window.adjustZoom(Number(el.dataset.delta)),
   cancelCropInline: (event, el) => window.cancelCropInline(el.dataset.formatId),
   saveCropInline: (event, el) => window.saveCropInline(el.dataset.formatId),
+  setStoryLayout: (event, el) => window.setStoryLayout(event, el.dataset.layout),
 };
 
 const inputActions = {
@@ -39,6 +40,8 @@ const inputActions = {
    updateEyebrow: (event, el) => window.updateEyebrow(event, el.dataset.formatId),
    updateSubtitle: (event, el) => window.updateSubtitle(event, el.dataset.formatId),
    handleZoomChange: (event) => window.handleZoomChange(event),
+   handleStoryColor1: (event) => window.handleStoryColor1(event),
+   handleStoryColor2: (event) => window.handleStoryColor2(event),
 };
 
 const blurActions = {
@@ -56,6 +59,7 @@ function runAction(map, event) {
 }
 
 function runBlurAction(event) {
+  if (!event.target || typeof event.target.closest !== 'function') return;
   const target = event.target.closest('[data-blur-action]');
   if (!target) return;
   const handler = blurActions[target.dataset.blurAction];
@@ -83,6 +87,17 @@ document.addEventListener('dragleave', (event) => {
 });
 document.addEventListener('drop', (event) => {
   if (event.target.closest('[data-dropzone]')) window.handleFileDrop(event);
+});
+document.addEventListener('dragstart', (event) => {
+  const slideButton = event.target.closest('[data-slide-order-id]');
+  if (slideButton) window.handleSlideReorderStart(event, slideButton.dataset.slideOrderId);
+});
+document.addEventListener('dragover', (event) => {
+  if (event.target.closest('[data-slide-order-id]')) window.handleSlideReorderOver(event);
+});
+document.addEventListener('drop', (event) => {
+  const slideButton = event.target.closest('[data-slide-order-id]');
+  if (slideButton) window.handleSlideReorderDrop(event, slideButton.dataset.slideOrderId);
 });
 
 function handleDragStart(event) {

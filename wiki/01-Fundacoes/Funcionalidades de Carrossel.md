@@ -25,7 +25,20 @@ Para garantir agilidade em coberturas de grandes eventos, o sistema oferece dois
     - Slug do projeto.
 - **Uso Ideal**: Para garantir que todos os slides sigam o mesmo padrão visual e configuração de campos.
 
-## 3. Exportação em Lote (Batch Export)
+## 3. Layouts Individuais por Slide
+
+Diferente das cores (que são globais para manter a unidade visual), cada slide no carrossel pode ter seu próprio estilo de fundo:
+- **Degradê Inferior**: Sombra na base para destacar textos claros.
+- **Degradê Superior**: Sombra no topo (ideal para slides de abertura ou com muita informação no topo).
+- **Fundo Sólido**: Preenchimento total com uma das cores da história, ideal para slides puramente textuais.
+
+## 4. Regras de Marca e Logo
+
+No formato "História Completa":
+- **Visibilidade**: O logo do IFMG é exibido **apenas no último slide** do carrossel, servindo como assinatura final.
+- **Dimensões**: O logo utiliza uma escala ampliada de **2.2x** em relação ao padrão, garantindo maior impacto visual no encerramento.
+
+## 5. Exportação em Lote (Batch Export)
 
 Ao detectar que o projeto possui mais de um slide, o botão principal de exportação muda seu comportamento:
 - **Exportar**: Abre o modal de exportação individual para o slide ativo.

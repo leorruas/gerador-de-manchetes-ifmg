@@ -33,10 +33,21 @@ O Manchete Express v2 oferece seis modelos pré-definidos, organizados em quatro
 | **Capa / Destaque** | Gradient | Gradiente Inferior | Matérias especiais, fotos de drone/paisagem. |
 | **Citação** | Quote | Overlay Preto (60%) | Aspas de diretores, alunos ou professores. |
 | **Número Destaque** | Infographic | Overlay Preto (40%) | "1º Lugar", "10 anos", "500 vagas". |
+| **História Completa** | Carrossel | Dinâmico (Sólido/Degradê) | Sequenciais de Instagram (Story/Post). |
 
 ---
 
-## 3. Comportamento dos Campos
+## 3. Comportamento do Template Carrossel
+
+O template **História Completa** possui regras tipográficas e de layout exclusivas para maximizar a legibilidade no Instagram:
+
+- **Fonte**: Utiliza a família **Montagu Slab** para todos os textos.
+- **Hierarquia Visual**:
+  - **Slide 1 (Capa)**: Manchete com escala **1.3x** e entrelinha (leading) de **1.15x**.
+  - **Slides 2-10**: Manchete com escala **0.85x** e entrelinha reduzida de **0.85x**.
+- **Cores**: Trabalha com duas cores globais alternadas (`storyColor1` e `storyColor2`).
+
+## 4. Comportamento dos Campos
 
 Dependendo do template escolhido, os campos de **Editoria** e **Subtítulo** assumem funções diferentes:
 

@@ -16,6 +16,18 @@ Este documento registra as correções críticas realizadas durante a evolução
 - **Problema**: O modal de crop causava bugs de layout em telas mobile e proporções extremas (Stories).
 - **Resolução**: Substituição do modal por edição **in-place** (diretamente no preview), garantindo estabilidade e fluidez.
 
+### BUG-024: event.target.closest is not a function
+- **Problema**: O blur handler disparava em alvos não-Element (ex: color picker).
+- **Resolução**: Adicionado guard clause em `events.js` para validar o alvo do evento.
+
+### BUG-025: QuotaExceededError no localStorage
+- **Problema**: Imagens base64 dos slides excediam o limite de ~5MB do navegador.
+- **Resolução**: Implementado fallback em `core.js` que persiste o estado sem imagens quando a quota é atingida.
+
+### BUG-026: Subtítulo exibia "undefined" ao sair do foco
+- **Problema**: `createSlideData` não inicializava os campos `subtitles` e `eyebrows`, causando erro ao carregar o slide.
+- **Resolução**: Correção na criação da estrutura de dados em `handlers-upload.js`.
+
 ## Melhorias de UX e Visual
 
 ### BUG-008: Logo IFMG Achatado
@@ -29,6 +41,22 @@ Este documento registra as correções críticas realizadas durante a evolução
 ### BUG-023: Persistência de Formatos Antigos
 - **Problema**: Adição de novos formatos (ex: LinkedIn) não aparecia para usuários com cache antigo.
 - **Resolução**: Lógica de `merge` profundo no carregamento do estado persistido.
+
+### BUG-027: Texto cortado na exportação do carrossel
+- **Problema**: O `boxY` ignorava fatores de escala da logo (2.2x) e headline (1.3x/0.85x).
+- **Resolução**: Recálculo da altura real em `drawCarouselStory` considerando as escalas dinâmicas.
+
+### BUG-028: Degradê superior não aparecia no preview
+- **Problema**: Overlay CSS com `z-index: 0` ficava atrás da imagem de fundo.
+- **Resolução**: Ajuste de `z-index: 1` para garantir a visibilidade do overlay.
+
+### BUG-029: Cores do título não eram globais
+- **Problema**: `saveStateToSlides` salvava cores individualmente por slide, quebrando a consistência visual.
+- **Resolução**: Propagação de `storyColor1/2` para todos os slides do carrossel.
+
+### BUG-030: Controles de layout aplicavam globalmente
+- **Problema**: Escolhas de degradê/sólido afetavam todos os slides simultaneamente.
+- **Resolução**: Alteração em `core.js` para suportar configurações de layout individuais por slide.
 
 ---
 

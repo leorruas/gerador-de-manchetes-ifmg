@@ -20,7 +20,7 @@ function renderApp() {
         
         appElement.innerHTML = `
             ${FeedbackBanner()}
-            <div class="min-h-screen bg-black text-white pb-28 sm:pb-24">
+            <div class="min-h-screen bg-black text-white" style="padding-bottom: calc(7.5rem + env(safe-area-inset-bottom));">
                 <div class="max-w-2xl mx-auto py-6 sm:py-8 px-4">
                     ${EditorPanel()}
                     <div class="mt-12 pt-4 flex flex-col gap-16">
@@ -47,7 +47,8 @@ function renderApp() {
 
                         const range = usableMaxTop - usableMinTop;
                         const topPosition = range > 0 ? usableMinTop + (state.textVerticalPositions[format.id] * range) : usableMinTop;
-                        box.style.top = `${topPosition}px`;
+                        const clampedTop = Math.max(0, Math.min(topPosition, preview.offsetHeight - box.offsetHeight - 8));
+                        box.style.top = `${clampedTop}px`;
                     }
                 }
             });
