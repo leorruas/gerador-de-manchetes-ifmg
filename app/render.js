@@ -1,6 +1,7 @@
 // Renderizacao central: decide entre boas-vindas/editor e posiciona overlays depois do DOM existir.
 (() => {
 const { constants, state, appElement, modalContainerElement } = window.mancheteApp;
+const { getSafeMargins } = window.layoutTokens;
 const { WelcomeScreen, ImagePreview, ControlsBar, EditorPanel, ExportModal, BatchExportModal, HistoryModal, FeedbackBanner } = window.mancheteTemplates;
 function renderApp() {
     if (!appElement) return;
@@ -37,10 +38,9 @@ function renderApp() {
                     const preview = document.getElementById(`preview-${format.id}`);
                     const box = document.getElementById(`headline-box-${format.id}`);
                     if (preview && box) {
-                        const safeAreaMarginPercent = 0.05; // 5% minimum from top or bottom
-                        const marginPx = preview.offsetHeight * safeAreaMarginPercent;
-                        const absoluteMinTop = marginPx;
-                        const absoluteMaxTop = preview.offsetHeight - box.offsetHeight - marginPx;
+                        const safeMargins = getSafeMargins(preview.offsetHeight, state.templateId);
+                        const absoluteMinTop = safeMargins.top;
+                        const absoluteMaxTop = preview.offsetHeight - box.offsetHeight - safeMargins.bottom;
                         
                         const usableMinTop = Math.min(absoluteMinTop, absoluteMaxTop < absoluteMinTop ? 0 : absoluteMinTop);
                         const usableMaxTop = Math.max(absoluteMaxTop, absoluteMaxTop < absoluteMinTop ? preview.offsetHeight - box.offsetHeight : absoluteMaxTop);

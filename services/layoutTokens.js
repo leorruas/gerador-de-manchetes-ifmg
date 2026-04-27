@@ -6,6 +6,7 @@ const TEXT_BOX = {
   widthRatio: 0.8759,
   leftRatio: 0.062,
   safeMarginRatio: 0.05,
+  heroBottomMarginRatio: 0.1,
 };
 
 const TEMPLATE_TEXT = {
@@ -90,12 +91,20 @@ function px(scale, value) {
   return scale * value;
 }
 
+function getSafeMargins(size, templateId) {
+  return {
+    top: size * TEXT_BOX.safeMarginRatio,
+    bottom: size * (templateId === 'HERO' ? TEXT_BOX.heroBottomMarginRatio : TEXT_BOX.safeMarginRatio),
+  };
+}
+
 window.layoutTokens = {
   BASE_WIDTH,
   TEXT_BOX,
   TEMPLATE_TEXT,
   getScale,
   getCanvasScale,
+  getSafeMargins,
   px,
 };
 })();

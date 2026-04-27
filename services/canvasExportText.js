@@ -1,7 +1,7 @@
 // Calcula a caixa arrastavel de texto e delega o desenho ao layout do template.
 (() => {
 const constants = window.appConstants;
-const { TEXT_BOX, TEMPLATE_TEXT, getCanvasScale } = window.layoutTokens;
+const { TEXT_BOX, TEMPLATE_TEXT, getCanvasScale, getSafeMargins } = window.layoutTokens;
 
 function getTextOverlayBox(ctx, format, textContent, textVerticalPercent) {
     const templateId = textContent.templateId || window.appConstants.TEMPLATE_ID.NEWS;
@@ -34,9 +34,9 @@ function getTextOverlayBox(ctx, format, textContent, textVerticalPercent) {
     const boxContentHeight = format.hasLogo ? Math.max(textHeight, logoSize) : textHeight;
     const boxHeight = boxContentHeight + padding * 2;
     
-    const marginPx = format.height * TEXT_BOX.safeMarginRatio;
-    const absoluteMinTop = marginPx;
-    const absoluteMaxTop = format.height - boxHeight - marginPx;
+    const safeMargins = getSafeMargins(format.height, templateId);
+    const absoluteMinTop = safeMargins.top;
+    const absoluteMaxTop = format.height - boxHeight - safeMargins.bottom;
     
     const usableMinTop = Math.min(absoluteMinTop, absoluteMaxTop < absoluteMinTop ? 0 : absoluteMinTop);
     const usableMaxTop = Math.max(absoluteMaxTop, absoluteMaxTop < absoluteMinTop ? format.height - boxHeight : absoluteMaxTop);

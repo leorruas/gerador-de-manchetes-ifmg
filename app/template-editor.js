@@ -52,8 +52,8 @@ const EditorPanel = () => `
                         </span>
                         <p class="text-[10px] text-zinc-500">Mudar o texto em um formato altera todos os outros.</p>
                     </div>
-                    <button data-action="toggleAutoSync" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500" style="background-color: ${state.autoSync ? '#fbbf24' : '#3f3f46'};">
-                        <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" style="transform: translateX(${state.autoSync ? '20px' : '0px'});"></span>
+                    <button data-action="toggleAutoSync" class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${state.autoSync ? 'bg-amber-400 text-black hover:bg-amber-500' : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700'}">
+                        ${state.autoSync ? 'Sincronizado' : 'Independente'}
                     </button>
                 </div>
             </div>

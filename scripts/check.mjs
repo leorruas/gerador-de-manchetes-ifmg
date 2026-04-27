@@ -37,6 +37,7 @@ const expectedScripts = [
   './app/handlers-upload.js',
   './app/handlers-export.js',
   './app/handlers-history.js',
+  './app/handlers-crop.js',
   './app/handlers-edit.js',
   './app/handlers-drag.js',
   './app/handlers.js',

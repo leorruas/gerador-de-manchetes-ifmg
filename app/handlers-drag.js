@@ -2,6 +2,7 @@
 // Drag vertical do texto e pan da imagem em modo crop.
 (() => {
 const { constants, canvasExport, DEFAULT_TEMPLATE_ID, state, createDefaultPositions, createDefaultTransforms, showFeedback, loadSlideToState, saveStateToSlides, schedulePersist, clamp, applyTemplate, updateCropPreview, getPreviewImageMetrics } = window.mancheteApp;
+const { getSafeMargins } = window.layoutTokens;
 const renderApp = () => window.renderApp();
 const renderModals = () => window.renderModals();
 // --- Drag Handlers for Text Box and Crop Image ---
@@ -38,11 +39,9 @@ function onDrag(event) {
         if (!preview || !box) return;
         
         // Add Safe Area restrictions (margin)
-        const safeAreaMarginPercent = 0.05; // 5% minimum from top or bottom
-        const marginPx = preview.offsetHeight * safeAreaMarginPercent;
-        
-        const absoluteMinTop = marginPx;
-        const absoluteMaxTop = preview.offsetHeight - box.offsetHeight - marginPx;
+        const safeMargins = getSafeMargins(preview.offsetHeight, state.templateId);
+        const absoluteMinTop = safeMargins.top;
+        const absoluteMaxTop = preview.offsetHeight - box.offsetHeight - safeMargins.bottom;
         
         // Ensure box fits. If it doesn't fit with margins, relax restraints
         const usableMinTop = Math.min(absoluteMinTop, absoluteMaxTop < absoluteMinTop ? 0 : absoluteMinTop);
@@ -102,9 +101,9 @@ function applyTextPosition(formatId, nextPosition) {
     const box = document.getElementById(`headline-box-${formatId}`);
     if (!preview || !box) return;
 
-    const marginPx = preview.offsetHeight * 0.05;
-    const minTop = marginPx;
-    const maxTop = preview.offsetHeight - box.offsetHeight - marginPx;
+    const safeMargins = getSafeMargins(preview.offsetHeight, state.templateId);
+    const minTop = safeMargins.top;
+    const maxTop = preview.offsetHeight - box.offsetHeight - safeMargins.bottom;
     const usableMinTop = Math.min(minTop, maxTop < minTop ? 0 : minTop);
     const usableMaxTop = Math.max(maxTop, maxTop < minTop ? preview.offsetHeight - box.offsetHeight : maxTop);
     const top = usableMinTop + (usableMaxTop - usableMinTop) * state.textVerticalPositions[formatId];
