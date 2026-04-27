@@ -36,7 +36,6 @@ const WelcomeScreen = () => {
                     ${constants.UploadIcon}
                     <p class="mt-4 font-semibold text-white">Arraste e solte uma imagem aqui</p>
                     <p class="text-sm text-zinc-400">ou clique para selecionar</p>
-                    <input id="image-upload" type="file" multiple accept="image/jpeg, image/png, image/webp" class="hidden" data-action="handleImageSelect" />
                 </label>
                 <div class="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-sm">
                     <button data-action="openHistoryModal" class="flex-1 bg-zinc-800 text-white font-semibold py-3 px-6 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 border border-zinc-700 flex items-center justify-center gap-2 shadow-lg">

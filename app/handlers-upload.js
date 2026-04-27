@@ -98,6 +98,7 @@ window.handleImageFiles = async (filesArray) => {
 
 window.handleImageSelect = (event) => {
     window.handleImageFiles(event.target.files);
+    event.target.value = '';
 };
 
 window.handleFileDrop = (event) => {

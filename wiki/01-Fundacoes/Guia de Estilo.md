@@ -57,3 +57,26 @@ Para manter os templates HTML limpos e modulares, **não utilizamos handlers inl
 - **Tamanho**: `140px` (escala 1080px).
 - **Posição**: Alinhado à esquerda na Glass Box ou centralizado em Infográficos.
 
+## 7. Controles de Preview e Edição
+
+Para facilitar a edição direta sobre o canvas de preview, implementamos controles contextuais e utilitários globais.
+
+### Controles de Utilidade (Canto Superior Direito)
+Estes botões ficam fixos no topo do card de cada formato:
+- **Olhinho (Imagem Pura)**: Permite ocultar todos os elementos de texto temporariamente para validar o enquadramento da foto.
+- **Contraste (Contrast Boost)**: Exclusivo para o template **Glass Box**. Aumenta o desfoque para 12px e aplica um brilho de 0.6, garantindo legibilidade em fotos com áreas muito claras.
+- **Ajustar/Preencher**: Alterna o modo de exibição da imagem (Contain vs Cover).
+- **Navegação de Slides**: Botões circulares numerados acima do preview para alternar entre as fotos do carrossel.
+
+### Controles de Contexto (Floating Buttons)
+Os botões de ativação de campos opcionais flutuam diretamente sobre a caixa de texto:
+- **Posicionamento**: Fixos 40px acima da `Headline Box`, acompanhando o movimento de arraste do texto.
+- **Botões de Editoria e Subtítulo**:
+  - Permitem ativar/desativar esses campos por formato.
+  - **Ícones**: Utilizam ícones de `+` para adicionar e `-` para remover o campo.
+  - **Exportação**: Estes botões são elementos de UI de edição e **não são incluídos** na imagem exportada.
+
+### Comportamento de Edição
+- **Edição Inline**: O clique nos textos ativa um `textarea` com as mesmas propriedades de estilo (fonte, tamanho, cor), permitindo edição direta sobre o preview.
+- **Arraste Livre**: O usuário pode reposicionar a caixa de texto (Headline Box) livremente. Os botões de controle acompanham esse movimento para manter a ergonomia.
+

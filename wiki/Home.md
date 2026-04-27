@@ -7,11 +7,14 @@ Esta Wiki é a **Single Source of Truth (SSoT)** para o desenvolvimento, design 
 ## 01. Fundações
 - **[[01-Fundacoes/Regras de Negocio|Regras de Negócio]]**: Objetivo, modos de operação e lógica de sincronização.
 - **[[01-Fundacoes/Guia de Estilo|Guia de Estilo]]**: Cores, tipografia, botões e padrões visuais.
+- **[[01-Fundacoes/Tipos de Templates|Tipos de Templates]]**: Catálogo de modelos, layouts e comportamentos.
+- **[[01-Fundacoes/Funcionalidades de Carrossel|Funcionalidades de Carrossel]]**: Gestão de slides, sincronização em lote e exportação múltipla.
 
 ## 02. Técnico
 - **[[02-Tecnico/Arquitetura Tecnica|Arquitetura Técnica]]**: Mapa modular de arquivos, fluxo de dados e governança de código.
 
 ## 03. Manutenção
+- **[[03-Manutencao/Log de Evolucao|Log de Evolução]]**: Registro de melhorias e novas funcionalidades implementadas.
 - **[[03-Manutencao/Problemas do Projeto|Problemas do Projeto]]**: Registro de problemas estruturais (maioria resolvidos na v2).
 - **[[03-Manutencao/Historico de Bugs|Histórico de Bugs]]**: Lições aprendidas com correções críticas.
 
