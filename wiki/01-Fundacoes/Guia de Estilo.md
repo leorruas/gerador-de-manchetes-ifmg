@@ -80,3 +80,26 @@ Os botões de ativação de campos opcionais flutuam diretamente sobre a caixa d
 - **Edição Inline**: O clique nos textos ativa um `textarea` com as mesmas propriedades de estilo (fonte, tamanho, cor), permitindo edição direta sobre o preview.
 - **Arraste Livre**: O usuário pode reposicionar a caixa de texto (Headline Box) livremente. Os botões de controle acompanham esse movimento para manter a ergonomia.
 
+## 8. Marcações de Rich Text
+
+Para dar dinamismo às manchetes, suportamos uma sintaxe simplificada de markdown processada em tempo real:
+
+- **Negrito**: `**texto**` -> Exibe em Archivo Bold (700).
+- **Itálico**: `*texto*` -> Exibe em itálico (usado em citações).
+- **Destaque Amber**: `$$texto$$` -> Aplica a cor Amber (#FBBF24). Ideal para palavras-chave na manchete.
+
+## 9. Sistema de Escala (Canvas vs Preview)
+
+Toda a lógica visual é baseada em uma **Matriz de 1080px**. 
+- **Escalabilidade**: Usamos uma função de escala para garantir que a proporção vista no navegador seja 100% idêntica à imagem exportada.
+- **Unidades**: No código, as medidas são definidas em valores nominais (para 1080px) e convertidas dinamicamente usando a utilidade `px(scaleFactor, valor)`.
+
+## 10. Feedback Visual e Estados
+
+- **Hover em Cards**: Todos os previews possuem um `hover:border-zinc-700` e aumento suave de sombra para indicar interatividade.
+- **Indicadores de Safe Zone**: No formato Story, exibimos overlays pontilhados (20% de opacidade) para alertar o usuário sobre áreas que serão cobertas pela interface do Instagram (perfil e caixa de resposta).
+- **Esquema de Cores por Template**: 
+  - **Notícia**: Preto translúcido.
+  - **Evento**: Azul institucional.
+  - **Comunicado**: Verde oficial.
+
