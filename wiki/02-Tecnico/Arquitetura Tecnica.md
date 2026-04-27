@@ -1,10 +1,10 @@
-# 🏗️ Arquitetura Técnica (v2 Modular)
+# Arquitetura Técnica (v2 Modular)
 
 O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vanilla, visando alta performance e facilidade de manutenção.
 
-## 📁 Mapa de Arquivos
+## Mapa de Arquivos
 
-### 🚀 Núcleo da Aplicação (`/app`)
+### Núcleo da Aplicação (`/app`)
 | Arquivo | Responsabilidade |
 | :--- | :--- |
 | `core.js` | Definição do Estado Global (`state`) e funções de persistência. |
@@ -19,7 +19,7 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 | `handlers-edit.js` | Manipuladores de texto, sincronização por escopo no carrossel, zoom e mudanças de template. |
 | `handlers-drag.js` | Lógica de arrasto (texto e crop) nos previews. |
 
-### 🎨 Componentes de UI (`/app`)
+### Componentes de UI (`/app`)
 | Arquivo | Responsabilidade |
 | :--- | :--- |
 | `template-welcome.js` | Tela inicial de upload e estatísticas. |
@@ -27,7 +27,7 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 | `template-preview.js` | Renderização do preview de cada formato (incluindo Glass Box). |
 | `templates-modals.js` | Definição de Modals (Exportação, Histórico, Wizard). |
 
-### 🛠️ Serviços de Baixo Nível (`/services`)
+### Serviços de Baixo Nível (`/services`)
 | Arquivo | Responsabilidade |
 | :--- | :--- |
 | `canvasExport.js` | Orquestrador da exportação para Canvas. |
@@ -37,13 +37,13 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 | `richText.js` | Parser de markdown para suporte a negrito/itálico no Canvas. |
 | `historyDb.js` | Camada de persistência IndexedDB. |
 
-## 🚀 Fluxo de Dados
+## Fluxo de Dados
 
 1. **Estado Centralizado**: Tudo o que o usuário vê (textos, zoom, posições) está no objeto `state` em `core.js`.
 2. **Reatividade Manual**: Após qualquer mudança no `state`, chamamos `renderApp()` para refletir as mudanças no HTML.
 3. **Exportação**: O Canvas **não** lê o DOM. Ele reconstrói a imagem lendo diretamente o `state`.
 
-## ✅ Qualidade e Limites
+## Qualidade e Limites
 
 - `npm run check` valida a sintaxe de todos os arquivos JS com `node --check`.
 - O mesmo comando falha se algum arquivo JS passar de 250 linhas.
@@ -55,3 +55,4 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 
 > [!IMPORTANT]
 > **Nunca** procure lógica de renderização ou eventos no `index.js` da raiz. Ele agora é apenas um ponto de entrada simbólico. Toda a inteligência reside nas pastas `/app` e `/services`.
+

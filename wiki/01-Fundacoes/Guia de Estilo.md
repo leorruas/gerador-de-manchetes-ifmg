@@ -1,4 +1,4 @@
-# 🎨 Guia de Estilo
+# Guia de Estilo
 
 A identidade visual do Manchete Express segue os padrões de comunicação do IFMG, com um toque moderno de UX.
 
@@ -56,3 +56,4 @@ Para manter os templates HTML limpos e modulares, **não utilizamos handlers inl
 
 - **Tamanho**: `140px` (escala 1080px).
 - **Posição**: Alinhado à esquerda na Glass Box ou centralizado em Infográficos.
+

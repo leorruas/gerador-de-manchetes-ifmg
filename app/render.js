@@ -22,7 +22,7 @@ function renderApp() {
             <div class="min-h-screen bg-black text-white pb-28 sm:pb-24">
                 <div class="max-w-2xl mx-auto py-6 sm:py-8 px-4">
                     ${EditorPanel()}
-                    <div class="mt-8 pt-8">
+                    <div class="mt-12 pt-4 flex flex-col gap-16">
                         ${previewsHTML}
                     </div>
                 </div>

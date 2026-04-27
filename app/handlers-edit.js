@@ -96,7 +96,6 @@ window.startHeadlineEdit = (formatId) => {
         textarea.value = state.headlines[formatId];
         textarea.focus();
         textarea.select();
-        // Auto-resize textarea
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight}px`;
     }
@@ -112,7 +111,61 @@ window.updateHeadline = (event, formatId) => {
 window.finishHeadlineEdit = (event, formatId) => {
     state.headlines[formatId] = event.target.value;
     schedulePersist();
-    renderApp(); // Re-render all previews with the new headline
+    renderApp();
+};
+
+window.startEyebrowEdit = (formatId) => {
+    const textDiv = document.getElementById(`eyebrow-text-${formatId}`);
+    const textarea = document.getElementById(`eyebrow-textarea-${formatId}`);
+    if (textDiv && textarea) {
+        textDiv.style.display = 'none';
+        textarea.style.display = 'block';
+        textarea.value = state.eyebrow;
+        textarea.focus();
+        textarea.select();
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+};
+
+window.updateEyebrow = (event) => {
+    state.eyebrow = event.target.value;
+    event.target.style.height = 'auto';
+    event.target.style.height = `${event.target.scrollHeight}px`;
+    schedulePersist();
+};
+
+window.finishEyebrowEdit = (event) => {
+    state.eyebrow = event.target.value;
+    schedulePersist();
+    renderApp();
+};
+
+window.startSubtitleEdit = (formatId) => {
+    const textDiv = document.getElementById(`subtitle-text-${formatId}`);
+    const textarea = document.getElementById(`subtitle-textarea-${formatId}`);
+    if (textDiv && textarea) {
+        textDiv.style.display = 'none';
+        textarea.style.display = 'block';
+        textarea.value = state.subtitle;
+        textarea.focus();
+        textarea.select();
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+};
+
+window.updateSubtitle = (event) => {
+    state.subtitle = event.target.value;
+    event.target.style.height = 'auto';
+    event.target.style.height = `${event.target.scrollHeight}px`;
+    schedulePersist();
+};
+
+window.finishSubtitleEdit = (event) => {
+    state.subtitle = event.target.value;
+    schedulePersist();
+    renderApp();
 };
 
 window.syncHeadline = (event, sourceFormatId) => {

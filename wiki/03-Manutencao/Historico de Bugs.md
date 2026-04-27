@@ -1,8 +1,8 @@
-# 🐛 Histórico de Bugs (v2)
+# Histórico de Bugs (v2)
 
 Este documento registra as correções críticas realizadas durante a evolução do Manchete Express, servindo de base para evitar regressões.
 
-## 🔴 Correções Estruturais
+## Correções Estruturais
 
 ### BUG-020: Race Condition na Exportação
 - **Problema**: O download disparava antes do canvas terminar de processar o Blob, causando rascunhos salvos com dados incompletos.
@@ -16,7 +16,7 @@ Este documento registra as correções críticas realizadas durante a evolução
 - **Problema**: O modal de crop causava bugs de layout em telas mobile e proporções extremas (Stories).
 - **Resolução**: Substituição do modal por edição **in-place** (diretamente no preview), garantindo estabilidade e fluidez.
 
-## 🟡 Melhorias de UX e Visual
+## Melhorias de UX e Visual
 
 ### BUG-008: Logo IFMG Achatado
 - **Problema**: ViewBox do SVG não era quadrado, causando distorção em alguns navegadores.
@@ -34,3 +34,4 @@ Este documento registra as correções críticas realizadas durante a evolução
 
 > [!TIP]
 > Para ver a lista completa de bugs históricos da v1, consulte [BUGS.md no histórico](file:///Users/leoruas/Desktop/gerador-de-manchetes-ifmg/wiki/historical/BUGS.md).
+

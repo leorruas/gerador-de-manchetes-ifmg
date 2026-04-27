@@ -19,8 +19,10 @@ const clickActions = {
   toggleHideText: (event, el) => window.toggleHideText(el.dataset.formatId),
   syncHeadline: (event, el) => window.syncHeadline(event, el.dataset.formatId),
   syncSlides: (event, el) => window.syncSlides(event, el.dataset.scope),
-  startHeadlineEdit: (event, el) => window.startHeadlineEdit(el.dataset.formatId),
-  toggleFitMode: (event, el) => window.toggleFitMode(el.dataset.formatId),
+   startHeadlineEdit: (event, el) => window.startHeadlineEdit(el.dataset.formatId),
+   startEyebrowEdit: (event, el) => window.startEyebrowEdit(el.dataset.formatId),
+   startSubtitleEdit: (event, el) => window.startSubtitleEdit(el.dataset.formatId),
+   toggleFitMode: (event, el) => window.toggleFitMode(el.dataset.formatId),
   toggleCropMode: (event, el) => window.toggleCropMode(el.dataset.formatId),
   adjustZoom: (event, el) => window.adjustZoom(Number(el.dataset.delta)),
   cancelCropInline: (event, el) => window.cancelCropInline(el.dataset.formatId),
@@ -31,14 +33,18 @@ const inputActions = {
   handleSlugChange: (event) => window.handleSlugChange(event),
   handleEyebrowChange: (event) => window.handleEyebrowChange(event),
   handleSubtitleChange: (event) => window.handleSubtitleChange(event),
-  updateHeadline: (event, el) => window.updateHeadline(event, el.dataset.formatId),
-  handleZoomChange: (event) => window.handleZoomChange(event),
+   updateHeadline: (event, el) => window.updateHeadline(event, el.dataset.formatId),
+   updateEyebrow: (event) => window.updateEyebrow(event),
+   updateSubtitle: (event) => window.updateSubtitle(event),
+   handleZoomChange: (event) => window.handleZoomChange(event),
 };
 
 const blurActions = {
   commitMetadataChanges: () => window.commitMetadataChanges(),
-  finishHeadlineEdit: (event, el) => window.finishHeadlineEdit(event, el.dataset.formatId),
-};
+   finishHeadlineEdit: (event, el) => window.finishHeadlineEdit(event, el.dataset.formatId),
+   finishEyebrowEdit: (event) => window.finishEyebrowEdit(event),
+   finishSubtitleEdit: (event) => window.finishSubtitleEdit(event),
+ };
 
 function runAction(map, event) {
   const target = event.target.closest('[data-action]');

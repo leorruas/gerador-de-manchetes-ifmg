@@ -42,51 +42,6 @@ const EditorPanel = () => `
                     `}).join('')}
                 </div>
             </div>
-            
-            <div class="flex flex-wrap items-center gap-3 border-t border-zinc-800 pt-4">
-                ${!state.showEyebrowInput ? `
-                    <button data-action="toggleEyebrowInput" class="flex items-center gap-1 text-sm text-zinc-400 hover:text-amber-400 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                        ${constants.TEMPLATES[state.templateId].layoutType === constants.LAYOUT_TYPE.QUOTE ? 'Adicionar Nome do Entrevistado' : 'Adicionar Editoria (ex: IFMG)'}
-                    </button>
-                ` : ''}
-                ${!state.showSubtitleInput ? `
-                    <button data-action="toggleSubtitleInput" class="flex items-center gap-1 text-sm text-zinc-400 hover:text-amber-400 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                        Adicionar Subtítulo / Apoio
-                    </button>
-                ` : ''}
-            </div>
-
-            ${state.showEyebrowInput || state.showSubtitleInput ? `
-                <div class="grid gap-4 sm:grid-cols-2 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
-                    ${state.showEyebrowInput ? `
-                        <label class="block">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="block text-sm font-medium text-zinc-300">
-                                    ${constants.TEMPLATES[state.templateId].layoutType === constants.LAYOUT_TYPE.QUOTE ? 'Nome do Entrevistado' : 'Editoria / Sobretítulo'}
-                                </span>
-                                <button data-action="toggleEyebrowInput" class="text-zinc-500 hover:text-red-400 transition-colors" title="Remover Campo">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
-                                </button>
-                            </div>
-                            <input aria-label="Editar sobtext" type="text" value="${state.eyebrow}" data-action="handleEyebrowChange" data-blur-action="commitMetadataChanges" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Ex: IFMG, 1º LUGAR, Nome" />
-                        </label>
-                    ` : ''}
-                    
-                    ${state.showSubtitleInput ? `
-                        <label class="block">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="block text-sm font-medium text-zinc-300">Subtítulo</span>
-                                <button data-action="toggleSubtitleInput" class="text-zinc-500 hover:text-red-400 transition-colors" title="Remover Subtítulo">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
-                                </button>
-                            </div>
-                            <textarea aria-label="Editar subtítulo" data-action="handleSubtitleChange" data-blur-action="commitMetadataChanges" rows="1" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y" placeholder="${constants.TEMPLATES[state.templateId].subtitle}">${state.subtitle}</textarea>
-                        </label>
-                    ` : ''}
-                </div>
-            ` : ''}
         </div>
     </section>
 `;

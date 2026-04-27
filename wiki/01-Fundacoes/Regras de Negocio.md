@@ -1,4 +1,4 @@
-# 📋 Regras de Negócio (v2)
+# Regras de Negócio (v2)
 
 ## 0. Objetivo do Projeto
 
@@ -13,14 +13,14 @@ O **Manchete Express** é uma ferramenta estratégica de comunicação para o **
 
 ## 1. Modos de Operação
 
-### 🖼️ Modo Multiformato (Campanha)
+### Modo Multiformato (Campanha)
 Neste modo, o usuário edita uma única notícia que é replicada automaticamente em 4 formatos:
 - **Instagram Post** (1080x1350)
 - **Instagram Story** (1080x1920)
 - **Portal dos Campi** (400x400)
 - **Portal Principal** (743x423)
 
-### 🎞️ Modo Carrossel
+### Modo Carrossel
 Permite o upload de até **10 slides** diferentes.
 - Cada slide pode ter sua própria imagem, manchete e enquadramento.
 - O usuário navega entre slides por uma barra de miniaturas.
@@ -76,3 +76,4 @@ Existem **6 templates** que alteram drasticamente a composição visual:
 - **Script Order**: O projeto depende de uma ordem estrita de carregamento em `index.html` devido ao uso de globais.
 - **Contracts**: O arquivo `app/contracts.js` valida se todos os handlers necessários estão presentes antes da inicialização.
 - **Size Limit**: Arquivos JS não devem ultrapassar **250 linhas** para manter a modularidade.
+
