@@ -29,16 +29,18 @@ Para garantir a integridade do design em todos os enquadramentos:
 Permite o upload de até **10 slides** diferentes.
 - Cada slide pode ter sua própria imagem, manchete e enquadramento.
 - O usuário navega entre slides por uma barra de miniaturas.
+- **Reordenação**: Suporte a drag-and-drop na barra de navegação para reordenar a sequência narrativa dos slides livremente após o upload.
 - **Limite de Memória**: O sistema bloqueia novos uploads se o total acumulado em Base64 ultrapassar **45 MB**, visando estabilidade em dispositivos móveis.
 - **Normalização de Imagem**: Todo upload passa por um processo de redimensionamento automático para no máximo **2400px** (maior lado) e compressão via Canvas antes de entrar no estado da aplicação.
 
 ## 2. Sistema de Templates
 
-Existem **6 templates** que alteram drasticamente a composição visual:
+Existem **7 templates** que alteram drasticamente a composição visual:
 - **NEWS, EVENT, NOTICE**: Usam a *Glass Box* (caixa translúcida com desfoque).
 - **HERO**: Layout limpo com gradiente na base.
 - **QUOTE**: Overlay escuro para citações e ícone de aspas.
 - **NUMBER**: Destaque para estatísticas com número gigante centralizado.
+- **CAROUSEL_STORY** (História Completa): Layout narrativo focado em múltiplas imagens sequenciais, com regras tipográficas próprias e otimizado para o Instagram.
 
 ## 3. Gestão de Conteúdo e Sincronização
 
@@ -53,6 +55,7 @@ Existem **6 templates** que alteram drasticamente a composição visual:
 - **Sincronização entre Slides (Carrossel)**:
   - **Sincronizar Manchetes**: Copia textos entre slides diferentes.
   - **Sincronizar Metadados**: Copia template, visibilidade de campos e contraste entre slides.
+  - **Exceção de Interface**: Os botões de sincronização manual em lote ficam **ocultos** quando o template ativo é o "História Completa", pois este formato pressupõe manchetes únicas por slide.
   - **Escopo de Auto-Sync**: No carrossel, o "Auto-Sync Global" sincroniza apenas as **Editorias**, permitindo que cada slide tenha sua própria manchete/narrativa.
 
 ### Visibilidade de Campos Opcionais

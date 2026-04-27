@@ -6,6 +6,7 @@ O Modo Carrossel permite a criação de múltiplas artes de forma simultânea, f
 
 Cada card de formato no preview exibe controles de carrossel no topo:
 - **Troca de Slide**: Botões numerados permitem alternar rapidamente entre as fotos carregadas.
+- **Reordenar Slides**: Os botões numerados suportam **drag-and-drop** (arrastar e soltar), permitindo alterar a sequência narrativa das fotos a qualquer momento.
 - **Adicionar Slide**: O ícone de `+` permite carregar novas imagens para o projeto atual a qualquer momento, expandindo o carrossel durante a edição sem perder o progresso atual.
 - **Limite**: O sistema suporta até **10 slides** por projeto.
 
@@ -44,7 +45,7 @@ Ao detectar que o projeto possui mais de um slide, o botão principal de exporta
 - **Exportar**: Abre o modal de exportação individual para o slide ativo.
 - **Exportar Tudo**: Gera um arquivo ZIP contendo todos os slides do carrossel processados para aquele formato específico.
 
-## 4. Limites e Performance
+## 6. Limites e Performance
 
 Devido ao processamento ser 100% no navegador:
 - **Memória**: O sistema monitora o uso de Base64 e impede novos slides se o limite de estabilidade for atingido (aprox. 45MB de dados de imagem).
