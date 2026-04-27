@@ -34,13 +34,13 @@ window.restoreHistoryItem = async (id) => {
                 // Legacy Version 1 restore mapped to new structure
                 state.baseImage = item.baseImage;
                 state.templateId = item.templateId;
-                state.eyebrow = item.eyebrow;
+                state.eyebrows = item.eyebrows || Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: item.eyebrow || '' }), {});
                 state.headlines = item.headlines;
-                state.subtitle = item.subtitle;
+                state.subtitles = item.subtitles || Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: item.subtitle || '' }), {});
                 state.slug = item.slug;
                 state.textVerticalPositions = item.textVerticalPositions;
                 state.transforms = item.transforms;
-                state.hideText = false;
+                state.hideText = {};
                 
                 // create single internal slide
                 const slideId = Date.now().toString();
@@ -49,16 +49,17 @@ window.restoreHistoryItem = async (id) => {
                     id: slideId,
                     baseImage: state.baseImage,
                     templateId: state.templateId,
-                    eyebrow: state.eyebrow,
-                    headlines: state.headlines,
-                    subtitle: state.subtitle,
+                    autoSync: true,
+                    eyebrows: { ...state.eyebrows },
+                    headlines: { ...state.headlines },
+                    subtitles: { ...state.subtitles },
                     slug: state.slug,
                     textVerticalPositions: state.textVerticalPositions,
                     transforms: state.transforms,
                     showEyebrowInput: item.showEyebrowInput ?? true,
                     showSubtitleInput: item.showSubtitleInput ?? false,
                     contrastBoost: item.contrastBoost || {},
-                    hideText: false
+                    hideText: {}
                 }];
                 state.baseImageElement.src = state.baseImage;
             }

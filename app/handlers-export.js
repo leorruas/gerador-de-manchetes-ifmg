@@ -48,7 +48,7 @@ window.handleSlugChange = (event) => {
 window.toggleEyebrowInput = () => {
     state.showEyebrowInput = !state.showEyebrowInput;
     if (!state.showEyebrowInput) {
-        state.eyebrow = '';
+        Object.keys(state.eyebrows).forEach(id => state.eyebrows[id] = '');
     }
     schedulePersist();
     renderApp();
@@ -57,7 +57,7 @@ window.toggleEyebrowInput = () => {
 window.toggleSubtitleInput = () => {
     state.showSubtitleInput = !state.showSubtitleInput;
     if (!state.showSubtitleInput) {
-        state.subtitle = '';
+        Object.keys(state.subtitles).forEach(id => state.subtitles[id] = '');
     }
     schedulePersist();
     renderApp();
@@ -67,16 +67,6 @@ window.handleTemplateChange = (templateId) => {
     applyTemplate(templateId, false);
     schedulePersist();
     renderApp();
-};
-
-window.handleEyebrowChange = (event) => {
-    state.eyebrow = event.target.value;
-    schedulePersist();
-};
-
-window.handleSubtitleChange = (event) => {
-    state.subtitle = event.target.value;
-    schedulePersist();
 };
 
 window.commitMetadataChanges = () => {
@@ -99,8 +89,8 @@ window.handleExport = async (type, event) => {
                 state.transforms[format.id],
                 {
                     headline: state.headlines[formatId] || '',
-                    eyebrow: state.eyebrow || '',
-                    subtitle: state.subtitle || '',
+                    eyebrow: state.eyebrows[formatId] || '',
+                    subtitle: state.subtitles[formatId] || '',
                     templateId: state.templateId,
                     showEyebrowInput: state.showEyebrowInput,
                     showSubtitleInput: state.showSubtitleInput,
@@ -162,8 +152,8 @@ window.handleBatchExport = async (type, event) => {
                     ts,
                     {
                         headline: slide.headlines[formatId] || '',
-                        eyebrow: slide.eyebrow || '',
-                        subtitle: slide.subtitle || '',
+                        eyebrow: slide.eyebrows[formatId] || '',
+                        subtitle: slide.subtitles[formatId] || '',
                         templateId: slide.templateId,
                         showEyebrowInput: slide.showEyebrowInput,
                         showSubtitleInput: slide.showSubtitleInput,

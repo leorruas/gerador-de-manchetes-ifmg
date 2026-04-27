@@ -41,6 +41,21 @@ const EditorPanel = () => `
                         </button>
                     `}).join('')}
                 </div>
+
+                <div class="flex items-center justify-between border-t border-zinc-800 pt-4 mt-2">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-white flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Sincronizar formatos
+                        </span>
+                        <p class="text-[10px] text-zinc-500">Mudar o texto em um formato altera todos os outros.</p>
+                    </div>
+                    <button data-action="toggleAutoSync" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 ${state.autoSync ? 'bg-amber-400' : 'bg-zinc-700'}">
+                        <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${state.autoSync ? 'translate-x-5' : 'translate-x-0'}"></span>
+                    </button>
+                </div>
             </div>
         </div>
     </section>

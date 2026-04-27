@@ -101,15 +101,49 @@ window.startHeadlineEdit = (formatId) => {
     }
 };
 
+    renderApp();
+};
+
+window.toggleAutoSync = () => {
+    state.autoSync = !state.autoSync;
+    
+    if (state.autoSync) {
+        // Ao ativar, sincronizamos todos os formatos com o conteúdo do primeiro formato disponível
+        const firstId = Object.keys(state.headlines)[0];
+        Object.keys(state.headlines).forEach(id => {
+            state.headlines[id] = state.headlines[firstId];
+            state.eyebrows[id] = state.eyebrows[firstId];
+            state.subtitles[id] = state.subtitles[firstId];
+        });
+        showFeedback('Auto-Sync Ativado: Textos sincronizados.');
+    } else {
+        showFeedback('Auto-Sync Desativado: Edições agora são independentes.');
+    }
+    
+    schedulePersist();
+    renderApp();
+};
+
 window.updateHeadline = (event, formatId) => {
-    state.headlines[formatId] = event.target.value;
+    const val = event.target.value;
+    if (state.autoSync) {
+        Object.keys(state.headlines).forEach(id => state.headlines[id] = val);
+    } else {
+        state.headlines[formatId] = val;
+    }
+    
     event.target.style.height = 'auto';
     event.target.style.height = `${event.target.scrollHeight}px`;
     schedulePersist();
 };
 
 window.finishHeadlineEdit = (event, formatId) => {
-    state.headlines[formatId] = event.target.value;
+    const val = event.target.value;
+    if (state.autoSync) {
+        Object.keys(state.headlines).forEach(id => state.headlines[id] = val);
+    } else {
+        state.headlines[formatId] = val;
+    }
     schedulePersist();
     renderApp();
 };
@@ -120,7 +154,7 @@ window.startEyebrowEdit = (formatId) => {
     if (textDiv && textarea) {
         textDiv.style.display = 'none';
         textarea.style.display = 'block';
-        textarea.value = state.eyebrow;
+        textarea.value = state.eyebrows[formatId];
         textarea.focus();
         textarea.select();
         textarea.style.height = 'auto';
@@ -128,15 +162,25 @@ window.startEyebrowEdit = (formatId) => {
     }
 };
 
-window.updateEyebrow = (event) => {
-    state.eyebrow = event.target.value;
+window.updateEyebrow = (event, formatId) => {
+    const val = event.target.value;
+    if (state.autoSync) {
+        Object.keys(state.eyebrows).forEach(id => state.eyebrows[id] = val);
+    } else {
+        state.eyebrows[formatId] = val;
+    }
     event.target.style.height = 'auto';
     event.target.style.height = `${event.target.scrollHeight}px`;
     schedulePersist();
 };
 
-window.finishEyebrowEdit = (event) => {
-    state.eyebrow = event.target.value;
+window.finishEyebrowEdit = (event, formatId) => {
+    const val = event.target.value;
+    if (state.autoSync) {
+        Object.keys(state.eyebrows).forEach(id => state.eyebrows[id] = val);
+    } else {
+        state.eyebrows[formatId] = val;
+    }
     schedulePersist();
     renderApp();
 };
@@ -147,7 +191,7 @@ window.startSubtitleEdit = (formatId) => {
     if (textDiv && textarea) {
         textDiv.style.display = 'none';
         textarea.style.display = 'block';
-        textarea.value = state.subtitle;
+        textarea.value = state.subtitles[formatId];
         textarea.focus();
         textarea.select();
         textarea.style.height = 'auto';
@@ -155,15 +199,25 @@ window.startSubtitleEdit = (formatId) => {
     }
 };
 
-window.updateSubtitle = (event) => {
-    state.subtitle = event.target.value;
+window.updateSubtitle = (event, formatId) => {
+    const val = event.target.value;
+    if (state.autoSync) {
+        Object.keys(state.subtitles).forEach(id => state.subtitles[id] = val);
+    } else {
+        state.subtitles[formatId] = val;
+    }
     event.target.style.height = 'auto';
     event.target.style.height = `${event.target.scrollHeight}px`;
     schedulePersist();
 };
 
-window.finishSubtitleEdit = (event) => {
-    state.subtitle = event.target.value;
+window.finishSubtitleEdit = (event, formatId) => {
+    const val = event.target.value;
+    if (state.autoSync) {
+        Object.keys(state.subtitles).forEach(id => state.subtitles[id] = val);
+    } else {
+        state.subtitles[formatId] = val;
+    }
     schedulePersist();
     renderApp();
 };
@@ -191,12 +245,15 @@ window.syncSlides = (event, scope) => {
         if (slide.id === source.id) return;
         if (scope === 'headline') {
             slide.headlines = { ...source.headlines };
+            slide.eyebrows = { ...source.eyebrows };
+            slide.subtitles = { ...source.subtitles };
             return;
         }
 
         slide.templateId = source.templateId;
-        slide.eyebrow = source.eyebrow;
-        slide.subtitle = source.subtitle;
+        slide.autoSync = source.autoSync;
+        slide.eyebrows = { ...source.eyebrows };
+        slide.subtitles = { ...source.subtitles };
         slide.slug = source.slug;
         slide.showEyebrowInput = source.showEyebrowInput;
         slide.showSubtitleInput = source.showSubtitleInput;

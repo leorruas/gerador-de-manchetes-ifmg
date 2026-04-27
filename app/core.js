@@ -4,7 +4,7 @@ const constants = window.appConstants;
 const canvasExport = window.canvasExportService;
 const { renderRichTextHtml } = window.richTextService;
 const STORAGE_KEY = 'mancheteexpress:editor-state';
-const STATE_SCHEMA_VERSION = 2;
+const STATE_SCHEMA_VERSION = 3;
 const DEFAULT_TEMPLATE_ID = constants.TEMPLATE_ID.NEWS;
 
 const createDefaultPositions = () =>
@@ -23,9 +23,10 @@ let state = {
     baseImage: null,
     baseImageElement: new Image(),
     templateId: DEFAULT_TEMPLATE_ID,
-    eyebrow: constants.TEMPLATES[DEFAULT_TEMPLATE_ID].eyebrow,
+    autoSync: true,
+    eyebrows: Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: constants.TEMPLATES[DEFAULT_TEMPLATE_ID].eyebrow }), {}),
     headlines: Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: 'Título da notícia ou chamada para a arte' }), {}),
-    subtitle: '',
+    subtitles: Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: '' }), {}),
     slug: 'noticia-exemplo',
     textVerticalPositions: createDefaultPositions(),
     transforms: createDefaultTransforms(),
@@ -72,9 +73,10 @@ function loadSlideToState(slideId) {
         state.activeSlideId = target.id;
         state.baseImage = target.baseImage;
         state.templateId = target.templateId;
-        state.eyebrow = target.eyebrow;
+        state.autoSync = target.autoSync ?? true;
+        state.eyebrows = { ...target.eyebrows };
         state.headlines = { ...target.headlines };
-        state.subtitle = target.subtitle;
+        state.subtitles = { ...target.subtitles };
         state.slug = target.slug;
         state.textVerticalPositions = { ...target.textVerticalPositions };
         state.transforms = { ...target.transforms };
@@ -93,9 +95,10 @@ function saveStateToSlides() {
     if(target) {
         target.baseImage = state.baseImage;
         target.templateId = state.templateId;
-        target.eyebrow = state.eyebrow;
+        target.autoSync = state.autoSync;
+        target.eyebrows = { ...state.eyebrows };
         target.headlines = { ...state.headlines };
-        target.subtitle = state.subtitle;
+        target.subtitles = { ...state.subtitles };
         target.slug = state.slug;
         target.textVerticalPositions = { ...state.textVerticalPositions };
         target.transforms = { ...state.transforms };
@@ -132,6 +135,34 @@ function getPersistedState() {
                  hideText: typeof parsed.hideText === 'boolean' ? {} : (parsed.hideText || {})
             } ];
             parsed.activeSlideId = parsed.id;
+        }
+
+        // Migração V2 para V3 (Auto-Sync)
+        if (parsed && parsed.schemaVersion < 3) {
+            const migrateSlide = (slide) => {
+                if (!slide.eyebrows) {
+                    slide.eyebrows = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: slide.eyebrow || '' }), {});
+                    delete slide.eyebrow;
+                }
+                if (!slide.subtitles) {
+                    slide.subtitles = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: slide.subtitle || '' }), {});
+                    delete slide.subtitle;
+                }
+                if (slide.autoSync === undefined) slide.autoSync = true;
+            };
+
+            if (parsed.slides) parsed.slides.forEach(migrateSlide);
+            // Handle root state if it was partially loaded (legacy)
+            if (parsed.eyebrow !== undefined) {
+                parsed.eyebrows = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: parsed.eyebrow || '' }), {});
+                delete parsed.eyebrow;
+            }
+            if (parsed.subtitle !== undefined) {
+                parsed.subtitles = Object.values(constants.FORMATS).reduce((acc, curr) => ({ ...acc, [curr.id]: parsed.subtitle || '' }), {});
+                delete parsed.subtitle;
+            }
+            if (parsed.autoSync === undefined) parsed.autoSync = true;
+            parsed.schemaVersion = 3;
         }
         return parsed;
     } catch (error) {
@@ -171,12 +202,13 @@ function applyTemplate(templateId, shouldOverwriteEmpty = false) {
     const previousTemplate = constants.TEMPLATES[state.templateId];
     state.templateId = templateId;
 
-    if (shouldOverwriteEmpty || !state.eyebrow || state.eyebrow === previousTemplate?.eyebrow) {
-        state.eyebrow = template.eyebrow;
+    if (shouldOverwriteEmpty || Object.values(state.eyebrows).every(v => !v || v === previousTemplate?.eyebrow)) {
+        const newVal = template.eyebrow;
+        Object.keys(state.eyebrows).forEach(id => state.eyebrows[id] = newVal);
     }
 
-    if (shouldOverwriteEmpty || !state.subtitle || state.subtitle === previousTemplate?.subtitle) {
-        state.subtitle = '';
+    if (shouldOverwriteEmpty || Object.values(state.subtitles).every(v => !v || v === previousTemplate?.subtitle)) {
+        Object.keys(state.subtitles).forEach(id => state.subtitles[id] = '');
     }
 }
 

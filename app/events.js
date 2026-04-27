@@ -11,6 +11,7 @@ const clickActions = {
   handleBatchExport: (event, el) => window.handleBatchExport(el.dataset.type, event),
   closeHistoryModal: () => window.closeHistoryModal(),
   restoreHistoryItem: (event, el) => window.restoreHistoryItem(Number(el.dataset.id)),
+  toggleAutoSync: () => window.toggleAutoSync(),
   handleTemplateChange: (event, el) => window.handleTemplateChange(el.dataset.templateId),
   toggleEyebrowInput: () => window.toggleEyebrowInput(),
   toggleSubtitleInput: () => window.toggleSubtitleInput(),
@@ -34,16 +35,16 @@ const inputActions = {
   handleEyebrowChange: (event) => window.handleEyebrowChange(event),
   handleSubtitleChange: (event) => window.handleSubtitleChange(event),
    updateHeadline: (event, el) => window.updateHeadline(event, el.dataset.formatId),
-   updateEyebrow: (event) => window.updateEyebrow(event),
-   updateSubtitle: (event) => window.updateSubtitle(event),
+   updateEyebrow: (event, el) => window.updateEyebrow(event, el.dataset.formatId),
+   updateSubtitle: (event, el) => window.updateSubtitle(event, el.dataset.formatId),
    handleZoomChange: (event) => window.handleZoomChange(event),
 };
 
 const blurActions = {
   commitMetadataChanges: () => window.commitMetadataChanges(),
    finishHeadlineEdit: (event, el) => window.finishHeadlineEdit(event, el.dataset.formatId),
-   finishEyebrowEdit: (event) => window.finishEyebrowEdit(event),
-   finishSubtitleEdit: (event) => window.finishSubtitleEdit(event),
+   finishEyebrowEdit: (event, el) => window.finishEyebrowEdit(event, el.dataset.formatId),
+   finishSubtitleEdit: (event, el) => window.finishSubtitleEdit(event, el.dataset.formatId),
  };
 
 function runAction(map, event) {

@@ -9,9 +9,14 @@ if (persistedState) {
     if (persistedState.templateId && constants.TEMPLATES[persistedState.templateId]) {
         state.templateId = persistedState.templateId;
     }
-    state.eyebrow = persistedState.eyebrow ?? state.eyebrow;
+    state.autoSync = persistedState.autoSync ?? state.autoSync;
+    if (persistedState.eyebrows) {
+        state.eyebrows = { ...state.eyebrows, ...persistedState.eyebrows };
+    }
     
-    state.subtitle = persistedState.subtitle || state.subtitle;
+    if (persistedState.subtitles) {
+        state.subtitles = { ...state.subtitles, ...persistedState.subtitles };
+    }
     state.slug = persistedState.slug || state.slug;
     
     // Merge persisted positions/headlines with defaults for new format support
