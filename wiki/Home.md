@@ -15,7 +15,6 @@ Esta Wiki é a **Single Source of Truth (SSoT)** para o desenvolvimento, design 
 
 ## 03. Manutenção
 - **[[03-Manutencao/Log de Evolucao|Log de Evolução]]**: Registro de melhorias e novas funcionalidades implementadas.
-- **[[03-Manutencao/Problemas do Projeto|Problemas do Projeto]]**: Registro de problemas estruturais (maioria resolvidos na v2).
 - **[[03-Manutencao/Historico de Bugs|Histórico de Bugs]]**: Lições aprendidas com correções críticas.
 
 ## 04. Próximos Passos
@@ -24,7 +23,8 @@ Esta Wiki é a **Single Source of Truth (SSoT)** para o desenvolvimento, design 
 ---
 
 ### Legado
-- **[Histórico de Documentos (v1)](file:///Users/leoruas/Desktop/gerador-de-manchetes-ifmg/wiki/historical)**: Arquivos originais antes da refatoração v2.
+- **[[historical/Problemas do Projeto|Problemas do Projeto (v1)]]**: Registro de problemas estruturais resolvidos durante a refatoração v2.
+- **[Histórico de Documentos (v1)](file:///Users/leoruas/Desktop/gerador-de-manchetes-ifmg/wiki/historical)**: Outros arquivos originais obsoletos.
 
 ---
 
