@@ -17,6 +17,7 @@ O **Manchete Express** é uma ferramenta estratégica de comunicação para o **
 Neste modo, o usuário edita uma única notícia que é replicada automaticamente em 4 formatos:
 - **Instagram Post** (1080x1350)
 - **Instagram Story** (1080x1920)
+- **LinkedIn Post** (1200x627)
 - **Portal dos Campi** (400x400)
 - **Portal Principal** (743x423)
 
@@ -41,15 +42,23 @@ Existem **6 templates** que alteram drasticamente a composição visual:
 - **Manchete (Headline)**: Campo principal com suporte a **Rich Text** (`**negrito**`, `*itálico*`, `$$destaque$$`).
 - **Subtítulo**: Campo de apoio opcional.
 
-### Sincronização Inteligente
-- **Auto-Sync de Editoria**: Mudanças na Editoria em um formato são replicadas para todos os outros do mesmo slide.
-- **Botão Sync Manchete**: Permite copiar manualmente a manchete de um formato específico para todos os outros daquele slide.
+### Sincronização e Governança de Texto
+- **Modo Independente**: Por padrão, cada formato pode ter sua própria manchete, permitindo ajustes de quebra de linha específicos para Story ou Post.
+- **Auto-Sync Global**: Quando ativado, qualquer edição em um campo (Editoria, Manchete ou Subtítulo) é replicada em tempo real para todos os formatos do slide ativo.
+- **Sincronização entre Slides (Carrossel)**:
+  - **Sincronizar Manchetes**: Copia textos entre slides diferentes.
+  - **Sincronizar Metadados**: Copia template, visibilidade de campos e contraste entre slides.
+
+### Visibilidade de Campos Opcionais
+- Os campos **Editoria** e **Subtítulo** são opcionais.
+- A visibilidade é controlada individualmente por formato através dos botões flutuantes (+/-).
+- Campos ocultos não são renderizados na exportação final.
 
 ## 4. Editor de Imagem (Crop & Zoom)
 
 ### Modos de Enquadramento
-- **Cover**: Preenche todo o canvas (pode cortar bordas).
-- **Contain**: Garante que a imagem apareça inteira, com bordas de 5% e cantos arredondados (ideal para fotos de grupo).
+- **Cover**: A imagem preenche todo o espaço disponível, podendo haver cortes laterais ou verticais dependendo da proporção.
+- **Contain (Ajustar)**: A imagem é reduzida para caber inteira no canvas. Neste modo, aplicamos automaticamente **bordas arredondadas** (3% da largura) e margens de segurança para um visual "card".
 
 ### Atalhos de Teclado (Modo Crop)
 | Tecla | Ação |
