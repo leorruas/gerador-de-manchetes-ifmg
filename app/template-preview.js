@@ -17,7 +17,7 @@ const ImagePreview = (format) => {
     const templateStyles = constants.TEMPLATES[state.templateId];
 
     const floatButtonsHtml = `
-    <div class="absolute left-0 w-full flex justify-center gap-2 z-50 pointer-events-auto" style="top: -40px;">
+    <div class="absolute left-0 w-full flex justify-center gap-2 z-30 pointer-events-auto" style="top: -40px;">
          <button data-action="toggleEyebrowInput" class="px-3 py-1.5 bg-amber-400 border border-amber-500/20 rounded-full text-[10px] font-bold text-black tracking-wider flex items-center gap-1 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-amber-900/20">
              ${state.showEyebrowInput ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>Editoria' : '<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>Editoria'}
          </button>
