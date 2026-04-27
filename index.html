@@ -42,10 +42,33 @@
     <div id="app"></div>
     <div id="modal-container"></div>
     
+    <!-- Ordem de scripts: globals base -> servicos -> estado -> handlers -> templates -> render/init. -->
     <script src="./constants.js"></script>
+    <script src="./services/layoutTokens.js"></script>
     <script src="./services/richText.js"></script>
+    <script src="./services/canvasExportHelpers.js"></script>
+    <script src="./services/canvasExportLayoutsA.js"></script>
+    <script src="./services/canvasExportLayoutsB.js"></script>
+    <script src="./services/canvasExportText.js"></script>
     <script src="./services/canvasExport.js"></script>
     <script src="./services/historyDb.js"></script>
+    <script src="./app/core.js"></script>
+    <script src="./app/preview-metrics.js"></script>
+    <script src="./app/handlers-upload.js"></script>
+    <script src="./app/handlers-export.js"></script>
+    <script src="./app/handlers-history.js"></script>
+    <script src="./app/handlers-edit.js"></script>
+    <script src="./app/handlers-drag.js"></script>
+    <script src="./app/handlers.js"></script>
+    <script src="./app/events.js"></script>
+    <script src="./app/template-welcome.js"></script>
+    <script src="./app/template-preview.js"></script>
+    <script src="./app/template-editor.js"></script>
+    <script src="./app/templates-main.js"></script>
+    <script src="./app/templates-modals.js"></script>
+    <script src="./app/render.js"></script>
+    <script src="./app/contracts.js"></script>
+    <script src="./app/init.js"></script>
     <script src="./index.js"></script>
 </body>
 </html>

@@ -3,5 +3,8 @@
   "private": true,
   "version": "1.0.0",
   "description": "Aplicação estática para gerar artes institucionais do IFMG.",
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check.mjs"
+  }
 }
