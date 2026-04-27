@@ -14,6 +14,7 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 | `events.js` | Delegação central de eventos baseada em `data-action`, removendo handlers inline dos templates. |
 | `preview-metrics.js` | Lógica de cálculo de zoom, pan e proporções para o editor. |
 | `handlers-upload.js` | Processamento de arquivos, drag-and-drop e criação de slides. |
+| `handlers-crop.js` | Lógica específica para o modo de reenquadramento (pan e zoom). |
 | `handlers-export.js` | Lógica de disparo de exportação individual e em lote (carrossel). |
 | `handlers-history.js` | Interação com o histórico (abrir, restaurar, deletar). |
 | `handlers-edit.js` | Manipuladores de texto, sincronização por escopo no carrossel, zoom e mudanças de template. |
@@ -41,7 +42,8 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 
 1. **Estado Centralizado**: Tudo o que o usuário vê (textos, zoom, posições) está no objeto `state` em `core.js`.
 2. **Reatividade Manual**: Após qualquer mudança no `state`, chamamos `renderApp()` para refletir as mudanças no HTML.
-3. **Exportação**: O Canvas **não** lê o DOM. Ele reconstrói a imagem lendo diretamente o `state`.
+3. **Eventos e Inputs Globais**: Elementos que precisam persistir entre trocas de tela (como o `<input type="file">` para adição de slides) são mantidos diretamente no `index.html`. A delegacão de eventos em `events.js` garante que esses elementos funcionem em qualquer contexto.
+4. **Exportação**: O Canvas **não** lê o DOM. Ele reconstrói a imagem lendo diretamente o `state`.
 
 ## Qualidade e Limites
 
