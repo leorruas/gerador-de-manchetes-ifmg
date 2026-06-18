@@ -7,6 +7,8 @@ Este documento registra as principais mudanças, melhorias e decisões de design
 ### Corrigido
 - **Quebras de linha no canvas**: A exportação não insere mais uma linha vazia extra quando o usuário digita apenas uma quebra de linha no texto.
 - **Estado do botão Exportar**: O modal de exportação fecha assim que os downloads são gerados, evitando que o botão permaneça preso em "Exportando..." enquanto o histórico é salvo.
+- **Número/Destaque**: O texto principal do destaque agora quebra linha na exportação como no preview, sem corte lateral ou subtítulo escapando pelo rodapé.
+- **Citação**: Frase e subtítulo ficam centralizados no preview, e a exportação usa a altura real do bloco com aspas, divisor e metadados.
 
 ## [2026-04-27] - Refinamento de UX e Edição Direta
 

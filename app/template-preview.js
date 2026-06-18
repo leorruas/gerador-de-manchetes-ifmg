@@ -22,6 +22,7 @@ const ImagePreview = (format) => {
     const storyColor = slideIndex % 2 === 1 ? state.storyColor2 : state.storyColor1;
     const storyBgColor = slideIndex % 2 === 1 ? state.storyColor1 : state.storyColor2;
     const isCarouselStory = templateStyles.layoutType === constants.LAYOUT_TYPE.CAROUSEL_STORY;
+    const renderCenteredRichTextHtml = (text) => renderRichTextHtml(text).replaceAll('text-left', 'text-center');
 
     const floatButtonsHtml = `
     <div class="absolute left-0 w-full flex justify-center gap-2 z-30 pointer-events-auto" style="top: -40px;">
@@ -133,7 +134,7 @@ const ImagePreview = (format) => {
                             
                             <svg class="text-amber-400 opacity-80" style="width: ${px(scaleFactor, quote.iconSize)}px; height: ${px(scaleFactor, quote.iconSize)}px; margin-bottom: ${px(scaleFactor, quote.iconGap)}px;" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
                             <div id="headline-text-${format.id}" class="block w-full cursor-text" data-action="startHeadlineEdit" data-format-id="${format.id}" style="color: ${templateStyles.textColor}; font-size:${px(scaleFactor, quote.headlineSize)}px; line-height:${px(scaleFactor, quote.headlineLineHeight)}px; text-align: center; font-style: italic; font-weight: 700;">
-                                ${renderRichTextHtml(state.headlines[format.id])}
+                                ${renderCenteredRichTextHtml(state.headlines[format.id])}
                             </div>
                             <textarea id="headline-textarea-${format.id}" data-action="updateHeadline" data-blur-action="finishHeadlineEdit" data-format-id="${format.id}" 
                                 class="block w-full bg-transparent resize-none border-none outline-none focus:ring-0 p-0 text-center" 
@@ -146,7 +147,7 @@ const ImagePreview = (format) => {
                                     style="letter-spacing:${quote.eyebrowTrackingEm}em; color: ${templateStyles.eyebrowColor}; display: none; font-size:${px(scaleFactor, quote.eyebrowSize)}px; line-height:${px(scaleFactor, quote.eyebrowLineHeight)}px;"></textarea>
                             ` : ''}
                             ${state.showSubtitleInput ? `
-                                <div id="subtitle-text-${format.id}" class="block w-full cursor-text" data-action="startSubtitleEdit" data-format-id="${format.id}" style="margin-top:${px(scaleFactor, quote.subtitleMarginTop)}px; color: ${templateStyles.subtitleColor}; font-size:${px(scaleFactor, quote.subtitleSize)}px; line-height:${px(scaleFactor, quote.subtitleLineHeight)}px;">${renderRichTextHtml(state.subtitles[format.id]) || 'EDITAR CARGO/FONTE'}</div>
+                                <div id="subtitle-text-${format.id}" class="block w-full cursor-text" data-action="startSubtitleEdit" data-format-id="${format.id}" style="margin-top:${px(scaleFactor, quote.subtitleMarginTop)}px; color: ${templateStyles.subtitleColor}; font-size:${px(scaleFactor, quote.subtitleSize)}px; line-height:${px(scaleFactor, quote.subtitleLineHeight)}px;">${renderCenteredRichTextHtml(state.subtitles[format.id]) || 'EDITAR CARGO/FONTE'}</div>
                                 <textarea id="subtitle-textarea-${format.id}" data-action="updateSubtitle" data-blur-action="finishSubtitleEdit" data-format-id="${format.id}" 
                                     class="block w-full bg-transparent resize-none border-none outline-none focus:ring-0 p-0 text-center" 
                                     style="margin-top:${px(scaleFactor, quote.subtitleMarginTop)}px; color: ${templateStyles.subtitleColor}; display: none; font-size:${px(scaleFactor, quote.subtitleSize)}px; line-height:${px(scaleFactor, quote.subtitleLineHeight)}px;"></textarea>
@@ -167,7 +168,7 @@ const ImagePreview = (format) => {
                                     style="margin-bottom:${px(scaleFactor, infographic.eyebrowMarginBottom)}px; color: ${templateStyles.eyebrowColor}; display: none; font-size:${px(scaleFactor, infographic.eyebrowSize)}px; line-height:${px(scaleFactor, infographic.eyebrowLineHeight)}px;"></textarea>
                             ` : ''}
                             <div id="headline-text-${format.id}" class="block w-full font-bold uppercase tracking-wider cursor-text" data-action="startHeadlineEdit" data-format-id="${format.id}" style="color: ${templateStyles.textColor}; font-size:${px(scaleFactor, infographic.headlineSize)}px; line-height:${px(scaleFactor, infographic.headlineLineHeight)}px; text-align: center;">
-                                ${renderRichTextHtml(state.headlines[format.id])}
+                                ${renderCenteredRichTextHtml(state.headlines[format.id])}
                             </div>
                             <textarea id="headline-textarea-${format.id}" data-action="updateHeadline" data-blur-action="finishHeadlineEdit" data-format-id="${format.id}" 
                                 class="block w-full bg-transparent resize-none border-none outline-none focus:ring-0 p-0 font-bold uppercase tracking-wider text-center" 

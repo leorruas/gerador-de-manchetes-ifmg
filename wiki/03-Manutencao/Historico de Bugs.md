@@ -68,6 +68,16 @@ Este documento registra as correções críticas realizadas durante a evolução
 - **Causa**: O modal só era fechado/restaurado após a etapa de salvamento no histórico, deixando a UI presa caso essa etapa demorasse ou ficasse pendente.
 - **Resolução**: `app/handlers-export.js` agora fecha o modal assim que os downloads são gerados, bloqueia cliques duplicados e só restaura o botão se ele ainda estiver conectado ao DOM.
 
+### BUG-033: Número/Destaque cortava textos na exportação
+- **Problema**: O campo grande do template Número/Destaque ficava em uma linha única na exportação, cortando texto nas laterais, e o subtítulo podia sair pelo rodapé.
+- **Causa**: A exportação desenhava o destaque com `ctx.fillText` sem quebra automática e calculava a caixa como se a logo ocupasse espaço lateral, embora ela seja vertical nesse template.
+- **Resolução**: `services/canvasExportLayoutsB.js` passou a quebrar o destaque em múltiplas linhas e `services/canvasExportText.js` passou a calcular altura/largura considerando logo vertical, múltiplas linhas e padding do subtítulo.
+
+### BUG-034: Preview e exportação divergiam no template Citação
+- **Problema**: A frase e o subtítulo do template Citação apareciam alinhados à esquerda no preview, mas centralizados na exportação; a posição exportada também podia divergir por altura subestimada.
+- **Causa**: O rich text do preview forçava `text-left`, e o cálculo genérico de caixa não contabilizava aspas, divisor e espaçamentos próprios do template.
+- **Resolução**: `app/template-preview.js` centraliza o rich text em Citação e Número/Destaque, e `services/canvasExportText.js` inclui os elementos estruturais do template Citação no cálculo de altura.
+
 ---
 
 > [!TIP]

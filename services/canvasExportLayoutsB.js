@@ -96,17 +96,21 @@ async function drawInfographic(ctx, data) {
             ctx.shadowOffsetY = safeScale * infographic.shadowOffsetY;
             
             ctx.font = `bold ${safeScale * infographic.eyebrowSize}px 'Archivo', sans-serif`;
-            ctx.fillStyle = templateStyles.eyebrowColor;
-            ctx.textBaseline = 'top';
-            ctx.textAlign = 'center';
-            ctx.fillText(textContent.eyebrow, centerX, currentY);
-            ctx.textAlign = 'left';
+            const lines = window.richTextService.parseRichTextToLines(ctx, textContent.eyebrow, ctx.font, textW);
+            const lineHeight = safeScale * infographic.eyebrowLineHeight;
+
+            for (const line of lines) {
+                const lineWidth = measureLineWidth(ctx, line);
+                const startX = centerX - lineWidth / 2;
+                window.richTextService.drawRichTextLines(ctx, [line], startX, currentY, lineHeight, textW, templateStyles.eyebrowColor);
+                currentY += lineHeight;
+            }
             
             ctx.shadowColor = "transparent";
             ctx.shadowBlur = 0;
             ctx.shadowOffsetY = 0;
             
-            currentY += safeScale * infographic.eyebrowLineHeight + safeScale * infographic.eyebrowMarginBottom;
+            currentY += safeScale * infographic.eyebrowMarginBottom;
         }
 
         if (textContent.headline) {

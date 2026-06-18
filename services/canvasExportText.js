@@ -22,17 +22,46 @@ function getTextOverlayBox(ctx, format, textContent, textVerticalPercent) {
     const padding = safeScale * tokens.padding;
     const logoSize = safeScale * tokens.logoSize;
     
-    const textWidth = textBoxWidth - padding * 2 - (format.hasLogo ? logoSize + tokens.logoGap * safeScale : 0);
-    const eyebrowHeight = (textContent.showEyebrowInput !== false && textContent.eyebrow) ? safeScale * tokens.eyebrowLineHeight + safeScale * tokens.eyebrowMarginBottom : 0;
+    const logoConsumesInlineSpace = ![
+        window.appConstants.TEMPLATE_ID.NUMBER,
+        window.appConstants.TEMPLATE_ID.QUOTE
+    ].includes(templateId);
+    const textWidth = textBoxWidth - padding * 2 - (format.hasLogo && logoConsumesInlineSpace ? logoSize + tokens.logoGap * safeScale : 0);
+    let eyebrowHeight = 0;
+    if (textContent.showEyebrowInput !== false && textContent.eyebrow) {
+        if (templateId === window.appConstants.TEMPLATE_ID.NUMBER) {
+            const eyebrowLines = window.richTextService.parseRichTextToLines(ctx, textContent.eyebrow, `${safeScale * tokens.eyebrowSize}px Archivo`, textWidth);
+            eyebrowHeight = eyebrowLines.length * safeScale * tokens.eyebrowLineHeight + safeScale * tokens.eyebrowMarginBottom;
+        } else {
+            eyebrowHeight = safeScale * tokens.eyebrowLineHeight + safeScale * tokens.eyebrowMarginBottom;
+        }
+    }
     
     const headlineLines = textContent.headline ? window.richTextService.parseRichTextToLines(ctx, textContent.headline, `${safeScale * tokens.headlineSize}px Archivo`, textWidth) : [];
     const subtitleLines = (textContent.showSubtitleInput !== false && textContent.subtitle) ? window.richTextService.parseRichTextToLines(ctx, textContent.subtitle, `${safeScale * tokens.subtitleSize}px Archivo`, textWidth) : [];
     
     const headlineHeight = headlineLines.length * safeScale * tokens.headlineLineHeight;
-    const subtitleHeight = subtitleLines.length > 0 ? (subtitleLines.length * safeScale * tokens.subtitleLineHeight) + (tokens.subtitleMarginTop * safeScale) : 0;
+    let subtitleHeight = subtitleLines.length > 0 ? (subtitleLines.length * safeScale * tokens.subtitleLineHeight) + (tokens.subtitleMarginTop * safeScale) : 0;
+    if (templateId === window.appConstants.TEMPLATE_ID.NUMBER && subtitleLines.length > 0) {
+        subtitleHeight += safeScale * tokens.subtitlePaddingY * 2;
+    }
     
-    const textHeight = eyebrowHeight + headlineHeight + subtitleHeight;
-    const boxContentHeight = format.hasLogo ? Math.max(textHeight, logoSize) : textHeight;
+    let textHeight = eyebrowHeight + headlineHeight + subtitleHeight;
+    if (templateId === window.appConstants.TEMPLATE_ID.QUOTE) {
+        textHeight += safeScale * (
+            tokens.iconSize +
+            tokens.iconGap +
+            tokens.dividerMarginTop +
+            tokens.dividerHeight +
+            tokens.dividerMarginBottom
+        );
+    }
+    const logoHeight = format.hasLogo ? logoSize + tokens.logoGap * safeScale : 0;
+    const boxContentHeight = templateId === window.appConstants.TEMPLATE_ID.NUMBER
+        ? logoHeight + textHeight
+        : templateId === window.appConstants.TEMPLATE_ID.QUOTE
+            ? textHeight
+        : (format.hasLogo ? Math.max(textHeight, logoSize) : textHeight);
     const boxHeight = boxContentHeight + padding * 2;
     
     const safeMargins = getSafeMargins(format.height, templateId);
