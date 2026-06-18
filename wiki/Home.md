@@ -4,6 +4,9 @@ Bem-vindo à documentação oficial do **Manchete Express (v2)**.
 
 Esta Wiki é a **Single Source of Truth (SSoT)** para o desenvolvimento, design e governança do projeto.
 
+> [!IMPORTANT]
+> **Versão online**: a aplicação publicada acompanha a branch `main`. A branch `v2` é histórica/de trabalho e não representa a versão em produção.
+
 ## 01. Fundações
 - **[[01-Fundacoes/Regras de Negocio|Regras de Negócio]]**: Objetivo, modos de operação e lógica de sincronização.
 - **[[01-Fundacoes/Guia de Estilo|Guia de Estilo]]**: Cores, tipografia, botões e padrões visuais.
@@ -30,4 +33,3 @@ Esta Wiki é a **Single Source of Truth (SSoT)** para o desenvolvimento, design 
 
 > [!IMPORTANT]
 > **Workflow Mandatário**: Siga sempre o arquivo de excelência em programação e os tokens de design definidos para garantir a consistência entre o editor e a exportação final.
-
