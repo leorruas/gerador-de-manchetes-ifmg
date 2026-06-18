@@ -98,7 +98,7 @@ function parseRichTextToLines(context, text, baseFont, maxWidth) {
 
   const oldFont = context.font;
 
-  paragraphs.forEach((paragraph, paragraphIndex) => {
+  paragraphs.forEach((paragraph) => {
     const tokens = paragraph.flatMap((segment) => tokenizeSegment(segment.text, segment.bold, segment.italic, segment.highlight));
 
     if (tokens.length === 0) {
@@ -130,9 +130,6 @@ function parseRichTextToLines(context, text, baseFont, maxWidth) {
       }
     }
 
-    if (paragraphIndex < paragraphs.length - 1) {
-      lines.push([]);
-    }
   });
 
   context.font = oldFont;

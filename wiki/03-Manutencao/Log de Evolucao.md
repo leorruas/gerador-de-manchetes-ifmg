@@ -2,6 +2,12 @@
 
 Este documento registra as principais mudanças, melhorias e decisões de design implementadas no Manchete Express.
 
+## [2026-06-18] - Correções de Exportação
+
+### Corrigido
+- **Quebras de linha no canvas**: A exportação não insere mais uma linha vazia extra quando o usuário digita apenas uma quebra de linha no texto.
+- **Estado do botão Exportar**: O modal de exportação fecha assim que os downloads são gerados, evitando que o botão permaneça preso em "Exportando..." enquanto o histórico é salvo.
+
 ## [2026-04-27] - Refinamento de UX e Edição Direta
 
 ### Adicionado
