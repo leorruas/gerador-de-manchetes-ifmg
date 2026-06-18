@@ -75,7 +75,8 @@ window.commitMetadataChanges = () => {
 
 window.handleExport = async (type, event) => {
     if (!state.baseImage) return;
-    const exportButton = event.target;
+    const exportButton = event.target.closest('button');
+    if (!exportButton || exportButton.disabled) return;
     const originalText = exportButton.innerHTML;
     exportButton.disabled = true;
     exportButton.innerHTML = 'Exportando...';
@@ -109,6 +110,7 @@ window.handleExport = async (type, event) => {
             // Delay para evitar bloqueio de downloads em massa no navegador
             await new Promise(res => setTimeout(res, 600));
         }
+        window.closeExportModal();
         showFeedback('Exportação concluída.', 'success');
         
         if (window.historyService) {
@@ -120,14 +122,16 @@ window.handleExport = async (type, event) => {
         console.error("Export failed:", e);
         showFeedback('Ocorreu um erro durante a exportação. Verifique o console para mais detalhes.', 'error');
     } finally {
-        exportButton.disabled = false;
-        exportButton.innerHTML = originalText;
-        window.closeExportModal();
+        if (exportButton.isConnected) {
+            exportButton.disabled = false;
+            exportButton.innerHTML = originalText;
+        }
     }
 };
 
 window.handleBatchExport = async (type, event) => {
-    const exportButton = event.target;
+    const exportButton = event.target.closest('button');
+    if (!exportButton || exportButton.disabled) return;
     const originalText = exportButton.innerHTML;
     exportButton.disabled = true;
     exportButton.innerHTML = 'Processando carrossel...';
@@ -179,6 +183,7 @@ window.handleBatchExport = async (type, event) => {
             i++;
             await new Promise(res => setTimeout(res, 500)); 
         }
+        window.closeBatchExportModal();
         showFeedback('Carrossel exportado com sucesso.', 'success');
         
         if (window.historyService) {
@@ -189,9 +194,10 @@ window.handleBatchExport = async (type, event) => {
         console.error("Batch Export failed:", e);
         showFeedback('Ocorreu um erro durante a exportação do carrossel.', 'error');
     } finally {
-        exportButton.disabled = false;
-        exportButton.innerHTML = originalText;
-        window.closeBatchExportModal();
+        if (exportButton.isConnected) {
+            exportButton.disabled = false;
+            exportButton.innerHTML = originalText;
+        }
     }
 };
 })();

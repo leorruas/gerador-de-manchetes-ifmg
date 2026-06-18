@@ -58,8 +58,17 @@ Este documento registra as correções críticas realizadas durante a evolução
 - **Problema**: Escolhas de degradê/sólido afetavam todos os slides simultaneamente.
 - **Resolução**: Alteração em `core.js` para suportar configurações de layout individuais por slide.
 
+### BUG-031: Quebra de linha duplicada na exportação
+- **Problema**: Ao exportar a imagem, uma quebra de linha simples digitada no editor era renderizada como uma linha em branco extra no canvas.
+- **Causa**: `parseRichTextToLines` adicionava uma linha vazia entre todos os parágrafos depois de dividir o texto por `\n`, duplicando o espaçamento apenas na exportação.
+- **Resolução**: Removida a linha vazia artificial em `services/richText.js`, preservando somente quebras vazias realmente digitadas pelo usuário.
+
+### BUG-032: Botão de exportação travado em "Exportando..."
+- **Problema**: Depois de clicar em PNG/JPG, o botão do modal podia permanecer desabilitado com o texto "Exportando..." até o modal ser aberto novamente.
+- **Causa**: O modal só era fechado/restaurado após a etapa de salvamento no histórico, deixando a UI presa caso essa etapa demorasse ou ficasse pendente.
+- **Resolução**: `app/handlers-export.js` agora fecha o modal assim que os downloads são gerados, bloqueia cliques duplicados e só restaura o botão se ele ainda estiver conectado ao DOM.
+
 ---
 
 > [!TIP]
 > Para ver a lista completa de bugs históricos da v1, consulte [BUGS.md no histórico](file:///Users/leoruas/Desktop/gerador-de-manchetes-ifmg/wiki/historical/BUGS.md).
-
