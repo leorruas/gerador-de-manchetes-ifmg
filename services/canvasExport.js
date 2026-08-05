@@ -58,7 +58,8 @@ function drawBaseImage(ctx, format, baseImageElement, transform) {
 }
 
 async function downloadCanvas(canvas, format, slug, type) {
-  const quality = type === 'jpeg' ? 0.9 : 1.0;
+  const canvasType = type === 'jpg' ? 'jpeg' : type;
+  const quality = canvasType === 'jpeg' ? 0.9 : 1.0;
   await new Promise((resolve) => {
     canvas.toBlob((blob) => {
       if (!blob) {
@@ -79,12 +80,16 @@ async function downloadCanvas(canvas, format, slug, type) {
       const link = document.createElement('a');
       link.download = getFilename(slug, format, type);
       link.href = objectUrl;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(objectUrl);
-      resolve();
-    }, `image/${type}`, quality);
+      // Firefox pode descartar o download se o link/URL forem removidos no mesmo ciclo do clique.
+      window.setTimeout(() => {
+        link.remove();
+        URL.revokeObjectURL(objectUrl);
+        resolve();
+      }, 1000);
+    }, `image/${canvasType}`, quality);
   });
 }
 
@@ -105,6 +110,5 @@ async function generateAndDownloadImage(format, baseImageElement, transform, tex
   await downloadCanvas(canvas, format, slug, type);
 }
 
-window.canvasExportService = { generateAndDownloadImage };
+window.canvasExportService = { generateAndDownloadImage, downloadCanvas };
 })();
-

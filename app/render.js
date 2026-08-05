@@ -6,7 +6,13 @@ const { WelcomeScreen, ImagePreview, ControlsBar, EditorPanel, ExportModal, Batc
 function renderApp() {
     if (!appElement) return;
 
-    if (!state.baseImage) {
+    if (state.mode === 'ps27') {
+        appElement.innerHTML = window.ps27Module.Ps27Screen();
+        window.ps27Module.renderCanvas('post');
+        window.ps27Module.renderCanvas('story');
+        window.ps27Module.renderCanvas('campi');
+        window.ps27Module.renderCanvas('portal');
+    } else if (!state.baseImage) {
         appElement.innerHTML = `
             ${FeedbackBanner()}
             ${WelcomeScreen()}

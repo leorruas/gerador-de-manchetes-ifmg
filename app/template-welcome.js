@@ -37,13 +37,14 @@ const WelcomeScreen = () => {
                     <p class="mt-4 font-semibold text-white">Arraste e solte uma imagem aqui</p>
                     <p class="text-sm text-zinc-400">ou clique para selecionar</p>
                 </label>
-                <div class="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-sm">
-                    <button data-action="openHistoryModal" class="flex-1 bg-zinc-800 text-white font-semibold py-3 px-6 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 border border-zinc-700 flex items-center justify-center gap-2 shadow-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Histórico
+                <div class="flex flex-col gap-4 mt-8 w-full max-w-sm">
+                    <button data-action="openPs27" class="inline-flex self-center items-center justify-center rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-black shadow-lg transition-colors hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200">
+                        Processo Seletivo 27
                     </button>
+                    <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-left text-xs text-zinc-300">
+                        <p class="font-bold text-white">Formatação de texto</p>
+                        <p class="mt-1 leading-5">Use <code class="text-amber-400">**negrito**</code>, <code class="text-amber-400">*itálico*</code> e <code class="text-amber-400">$$destaque verde$$</code> nas chamadas e subtítulos.</p>
+                    </div>
                 </div>
                 ${statsHtml}
             </div>
@@ -84,4 +85,3 @@ const WelcomeScreen = () => {
 };
 window.mancheteTemplates = { ...(window.mancheteTemplates || {}), WelcomeScreen };
 })();
-

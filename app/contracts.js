@@ -12,6 +12,7 @@ const requiredGlobals = [
   'imageStore',
   'mancheteApp',
   'mancheteTemplates',
+  'ps27Module',
 ];
 
 const requiredHandlers = [
@@ -61,6 +62,28 @@ const requiredHandlers = [
   'handleGlobalKeydown',
   'stopEventPropagation',
   'startDrag',
+  'openPs27',
+  'closePs27',
+  'ps27SetFormat',
+  'ps27SetSlogan',
+  'ps27SetSticker',
+  'ps27SetCharacter',
+  'ps27ToggleDateTime',
+  'ps27SetDateSticker',
+  'ps27SetDatePart',
+  'ps27SetHeadline',
+  'ps27BeginText',
+  'ps27RenderRichText',
+  'ps27Download',
+  'ps27ToggleExportMenu',
+  'ps27SyncText',
+  'ps27ExportAll',
+  'ps27ToggleAutoSync',
+  'ps27ToggleEyebrow',
+  'ps27ToggleSubtitle',
+  'ps27SetEyebrow',
+  'ps27SetSubtitle',
+  'ps27NewPost',
 ];
 
 function assertContracts() {

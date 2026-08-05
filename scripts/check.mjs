@@ -50,6 +50,8 @@ const expectedScripts = [
   './app/template-preview-story.js',
   './app/template-preview.js',
   './app/template-editor.js',
+  './app/ps27-assets.js',
+  './app/ps27-module.js',
   './app/templates-main.js',
   './app/templates-modals.js',
   './app/render.js',

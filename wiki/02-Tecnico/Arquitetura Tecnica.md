@@ -27,6 +27,7 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 | :--- | :--- |
 | `template-welcome.js` | Tela inicial de upload e estatísticas. |
 | `template-editor.js` | Painel de controle lateral (seleção de template, inputs). |
+| `ps27-module.js` | Módulo do Processo Seletivo 2027: composição das camadas, edição direta de texto e exportação dos formatos sociais. |
 | `template-preview.js` | Renderização do preview de cada formato (incluindo Glass Box). |
 | `templates-modals.js` | Definição de Modals (Exportação, Histórico, Wizard). |
 
@@ -40,6 +41,10 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 | `richText.js` | Parser de markdown para suporte a negrito/itálico no Canvas. |
 | `historyDb.js` | Camada de persistência IndexedDB para rascunhos exportados. |
 | `imageStore.js` | Camada de persistência IndexedDB exclusiva para imagens dos slides. |
+
+### Assets PS27 (`/assets/ps27`)
+
+As imagens extraídas dos SVGs do Processo Seletivo 2027 ficam em `assets/ps27/`. Os SVGs de origem ficam em `svgs - processo seletivo/`, e o script `scripts/extract-ps27-assets.mjs` recria os assets quando a exportação do Figma for atualizada.
 
 ## Fluxo de Dados
 
@@ -65,4 +70,3 @@ O Manchete Express v2 utiliza uma arquitetura modular baseada em Javascript Vani
 
 > [!IMPORTANT]
 > **Nunca** procure lógica de renderização ou eventos no `index.js` da raiz. Ele agora é apenas um ponto de entrada simbólico. Toda a inteligência reside nas pastas `/app` e `/services`.
-

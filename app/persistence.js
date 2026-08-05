@@ -36,6 +36,8 @@ function stripImagesFromState() {
         schemaVersion: STATE_SCHEMA_VERSION,
         activeSlideId: state.activeSlideId,
         slides: state.slides.map(slide => ({ ...slide, baseImage: '' })),
+        // O PS27 não contém imagens do usuário: apenas escolhas e textos leves.
+        ps27: { ...state.ps27, showExportMenu: false },
     };
 }
 

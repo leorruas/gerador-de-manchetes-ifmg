@@ -18,6 +18,31 @@ const createDefaultTransforms = () =>
 
 let state = {
     schemaVersion: STATE_SCHEMA_VERSION,
+    mode: 'manchetes',
+    ps27: {
+        format: 'post',
+        slogan: 'slogan-ps27',
+        sticker: 'adesivo-retangular-amarelo',
+        character: 'lucas',
+        headline: 'Digite o seu texto aqui',
+        headlines: {
+            post: 'Digite o seu texto aqui',
+            story: 'Digite o seu texto aqui',
+            campi: 'Digite o seu texto aqui',
+            portal: 'Digite o seu texto aqui',
+        },
+        autoSync: true,
+        eyebrows: { post: 'Editoria', story: 'Editoria', campi: 'Editoria', portal: 'Editoria' },
+        subtitles: { post: 'Seu subtítulo aqui', story: 'Seu subtítulo aqui', campi: 'Seu subtítulo aqui', portal: 'Seu subtítulo aqui' },
+        showEyebrows: { post: true, story: true, campi: true, portal: true },
+        showSubtitles: { post: false, story: false, campi: false, portal: false },
+        showDateTime: false,
+        dateSticker: 'adesivo-data-amarelo',
+        dateDay: '',
+        dateMonth: '',
+        dateHour: '',
+        showExportMenu: false,
+    },
 
     // === Dados do Slide Ativo ===
     baseImage: null,

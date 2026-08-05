@@ -4,7 +4,6 @@ const { constants, state } = window.mancheteApp;
 const ControlsBar = () => `
     <footer class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm border-t border-zinc-800 p-2 z-50" style="padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));">
       <div class="max-w-2xl mx-auto flex flex-row items-stretch gap-2">
-        <button aria-label="Histórico de Artes" data-action="openHistoryModal" class="flex-1 bg-zinc-800 text-white text-xs font-semibold py-2 px-2 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 border border-zinc-700">Histórico</button>
         <button aria-label="Escolher nova imagem" data-action="handleNewImage" class="flex-1 bg-zinc-800 text-white text-xs font-semibold py-2 px-2 rounded-lg hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 border border-zinc-700">Novo Post</button>
         <button aria-label="Exportar"
             data-action="${state.slides && state.slides.length > 1 ? 'openBatchExportModal' : 'openExportModal'}" 

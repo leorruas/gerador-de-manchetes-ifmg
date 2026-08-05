@@ -4,7 +4,15 @@ Gerador de artes institucionais e manchetes para redes sociais do IFMG.
 
 ## 🚀 Como usar
 
-Acesse a aplicação abrindo o arquivo `index.html` em qualquer navegador moderno.
+Abra o arquivo `index.html` diretamente em um navegador moderno. As camadas do módulo Processo Seletivo 2027 são embutidas na aplicação para que a exportação também funcione ao abrir pelo Finder.
+
+Para desenvolvimento local, também é possível usar:
+
+```bash
+npm run start
+```
+
+Depois, acesse [http://localhost:4173](http://localhost:4173) no navegador.
 
 ## 🌐 Versão online
 

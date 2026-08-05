@@ -6,6 +6,21 @@ window.addEventListener('keydown', window.handleGlobalKeydown);
 const persistedState = await hydratePersistedImages(getPersistedState());
 if (persistedState) {
     state.schemaVersion = STATE_SCHEMA_VERSION;
+    if (persistedState.ps27) {
+        const savedPs27 = persistedState.ps27;
+        const formatIds = ['post', 'story', 'campi', 'portal'];
+        const restorePs27Map = (key, legacyKey, fallback) => savedPs27[key] || Object.fromEntries(formatIds.map((id) => [id, savedPs27[legacyKey] ?? fallback[id]]));
+        state.ps27 = {
+            ...state.ps27,
+            ...savedPs27,
+            headlines: { ...state.ps27.headlines, ...savedPs27.headlines },
+            eyebrows: { ...state.ps27.eyebrows, ...restorePs27Map('eyebrows', 'eyebrow', state.ps27.eyebrows) },
+            subtitles: { ...state.ps27.subtitles, ...restorePs27Map('subtitles', 'subtitle', state.ps27.subtitles) },
+            showEyebrows: { ...state.ps27.showEyebrows, ...restorePs27Map('showEyebrows', 'showEyebrow', state.ps27.showEyebrows) },
+            showSubtitles: { ...state.ps27.showSubtitles, ...restorePs27Map('showSubtitles', 'showSubtitle', state.ps27.showSubtitles) },
+            showExportMenu: false,
+        };
+    }
     if (Array.isArray(persistedState.slides) && persistedState.slides.length > 0) {
         state.slides = persistedState.slides;
         if (state.slides.length <= 1 && state.slides[0].templateId === constants.TEMPLATE_ID.CAROUSEL_STORY) {

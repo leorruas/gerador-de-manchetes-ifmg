@@ -2,6 +2,25 @@
 (() => {
 const clickActions = {
   openHistoryModal: () => window.openHistoryModal(),
+  openPs27: () => window.openPs27(),
+  closePs27: () => window.closePs27(),
+  ps27SetFormat: (event, el) => window.ps27SetFormat(el.dataset.value),
+  ps27SetSlogan: (event, el) => window.ps27SetSlogan(el.dataset.value),
+  ps27SetSticker: (event, el) => window.ps27SetSticker(el.dataset.value),
+  ps27SetCharacter: (event, el) => window.ps27SetCharacter(el.dataset.value),
+  ps27SetHeadline: (event, el) => window.ps27BeginText(el),
+  ps27SetEyebrow: (event, el) => window.ps27BeginText(el),
+  ps27SetSubtitle: (event, el) => window.ps27BeginText(el),
+  ps27ToggleDateTime: () => window.ps27ToggleDateTime(),
+  ps27SetDateSticker: (event, el) => window.ps27SetDateSticker(el.dataset.value),
+  ps27Download: (event, el) => window.ps27Download(el.dataset.format, el.dataset.type),
+  ps27ToggleExportMenu: () => window.ps27ToggleExportMenu(),
+  ps27SyncText: () => window.ps27SyncText(),
+  ps27ToggleAutoSync: () => window.ps27ToggleAutoSync(),
+  ps27ExportAll: (event, el) => window.ps27ExportAll(el.dataset.type, event),
+  ps27ToggleEyebrow: (event, el) => window.ps27ToggleEyebrow(el.dataset.format),
+  ps27ToggleSubtitle: (event, el) => window.ps27ToggleSubtitle(el.dataset.format),
+  ps27NewPost: () => window.ps27NewPost(),
   handleNewImage: () => window.handleNewImage(),
   openExportModal: (event, el) => window.openExportModal(el.dataset.formatId || null),
   closeExportModal: () => window.closeExportModal(),
@@ -34,6 +53,10 @@ const clickActions = {
 
 const inputActions = {
   handleSlugChange: (event) => window.handleSlugChange(event),
+  ps27SetHeadline: (event, el) => window.ps27SetHeadline(event.target.innerText || event.target.value, el.dataset.format),
+  ps27SetEyebrow: (event, el) => window.ps27SetEyebrow(event.target.innerText || event.target.value, el.closest('[id^="headline-box-"]')?.id.replace('headline-box-', '')),
+  ps27SetSubtitle: (event, el) => window.ps27SetSubtitle(event.target.innerText || event.target.value, el.closest('[id^="headline-box-"]')?.id.replace('headline-box-', '')),
+  ps27SetDatePart: (event, el) => window.ps27SetDatePart(el.dataset.part, event.target.value, event.target),
   handleEyebrowChange: (event, el) => window.handleEyebrowChange(event, el.dataset.formatId),
   handleSubtitleChange: (event, el) => window.handleSubtitleChange(event, el.dataset.formatId),
    updateHeadline: (event, el) => window.updateHeadline(event, el.dataset.formatId),
@@ -46,6 +69,7 @@ const inputActions = {
 
 const blurActions = {
   commitMetadataChanges: () => window.commitMetadataChanges(),
+  ps27RenderRichText: (event, el) => window.ps27RenderRichText(el),
    finishHeadlineEdit: (event, el) => window.finishHeadlineEdit(event, el.dataset.formatId),
    finishEyebrowEdit: (event, el) => window.finishEyebrowEdit(event, el.dataset.formatId),
    finishSubtitleEdit: (event, el) => window.finishSubtitleEdit(event, el.dataset.formatId),
